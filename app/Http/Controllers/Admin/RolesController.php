@@ -33,12 +33,10 @@ class RolesController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate form input
         $request->validate([
             'name' => 'required|string|unique:roles,name',
         ]);
     
-        // Create role
         Role::create([
             'name' => $request->name,
             'guard_name' => 'web',

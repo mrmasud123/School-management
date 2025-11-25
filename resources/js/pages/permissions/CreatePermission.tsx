@@ -1,26 +1,43 @@
-import { Head,Link, useForm } from '@inertiajs/react';
+import { Head,Link, useForm,router } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-
+import toast from 'react-hot-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-// interface Permission {
-//   id: number;
-//   name: string;
-//   guard_name: string;
-//   created_at: string;
-//   updated_at: string;
-// }
+import { useState } from 'react';
+
 
 export default function CreatePermission() {
-//   const { permissions } = usePage<{ permissions: Permission[] }>().props;
+  const [loading, setLoading] = useState(false);
+  const form = useForm({ permission_name: '' });
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    router.post('/permissions',
+      {
+        name: form.data.permission_name,
+      },
+      {
+        onStart: () => setLoading(true),
+        onFinish: () => setLoading(false),
+        onSuccess: () => {
+          setLoading(false);
+          form.reset();
+          toast.success("Permission created successfully!");
+          window.location.href = "/permissions";
+        },
+        onError: (err) => {
+          setLoading(false);
+          console.log(err);
+          toast.error(err.name);
+        }
 
-//   const handleDelete = (id: number) => {
-//     if (confirm("Are you sure you want to delete this permission?")) {
-//       Inertia.delete(`/permissions/${id}`);
-//     }
-//   };
-    const form = useForm({permission_name : ''});
+      }
+    );
+
+
+  }
   return (
     <AppLayout breadcrumbs={[{ title: 'Create permission', href: '/permissions/create' }]}> 
       <Head title="Permission Management" />
@@ -31,7 +48,7 @@ export default function CreatePermission() {
                   <Link href={'/permissions'} className="px-2 py-1 text-sm bg-green-600 rounded-md text-white cursor-pointer">All permission</Link>
         </div>
 
-              <form action="">
+              <form action="" onSubmit={handleSubmit}>
               <div className="flex flex-col">
                     <label className="mb-1 font-medium text-sm text-muted-foreground">Enter the permission name</label>
                     <Input
@@ -41,7 +58,39 @@ export default function CreatePermission() {
                     />
                   </div>
                   <div className="pt-4">
-                              <Button type="submit" className="w-full md:w-auto cursor-pointer">Add Permission</Button>
+                  <Button
+              type="submit"
+              disabled={loading}
+              className="flex cursor-pointer items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                "Create Permission"
+              )}
+            </Button>
                           </div>
                   
         </form>
