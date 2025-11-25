@@ -259,7 +259,6 @@ export default function StudentAdmission() {
             </div>
         </section>
 
-        {/* Guardian Details */}
         <section className="border rounded-lg p-6 space-y-4 bg-card">
             <h2 className="text-xl font-semibold">Guardian Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

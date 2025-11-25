@@ -1,26 +1,42 @@
-import { Head,Link, useForm } from '@inertiajs/react';
+import { Head,Link, useForm, router } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-
+import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-// interface Permission {
-//   id: number;
-//   name: string;
-//   guard_name: string;
-//   created_at: string;
-//   updated_at: string;
-// }
+
 
 export default function CreateRole() {
-//   const { permissions } = usePage<{ permissions: Permission[] }>().props;
 
-//   const handleDelete = (id: number) => {
-//     if (confirm("Are you sure you want to delete this permission?")) {
-//       Inertia.delete(`/permissions/${id}`);
-//     }
-//   };
-    const form = useForm({role_name : ''});
+  const form = useForm({ role_name: '' });
+  
+const [loading, setLoading] = useState(false);
+  const handleSubmit = (e:React.FormEvent) => {
+    e.preventDefault();
+    
+    router.post('/roles', 
+      {
+          name: form.data.role_name,
+      },
+      {
+          onStart: () => setLoading(true),
+          onFinish: () => setLoading(false),
+          onSuccess: () => {
+            form.reset();
+            toast.success("Role created successfully!");
+            window.location.href = "/roles";
+        },
+        onError: (err) => {
+          console.log(err);
+          toast.error(err.name);
+          }
+          
+      }
+  );
+      
+  
+  }
   return (
     <AppLayout breadcrumbs={[{ title: 'Create role', href: '/roles/create' }]}> 
       <Head title="Role Management" />
@@ -31,7 +47,7 @@ export default function CreateRole() {
                   <Link href={'/roles'} className="px-2 py-1 text-sm bg-green-600 rounded-md text-white cursor-pointer">All roles</Link>
         </div>
 
-              <form action="">
+              <form action="" onSubmit={handleSubmit}>
               <div className="flex flex-col">
                     <label className="mb-1 font-medium text-sm text-muted-foreground">Enter the role name</label>
                     <Input
