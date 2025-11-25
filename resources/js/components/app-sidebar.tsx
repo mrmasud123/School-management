@@ -11,7 +11,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { type NavItem } from '@/types';
+import { NavItemWithSubMenu, type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
     BookOpen,
@@ -26,11 +26,12 @@ import {
     BarChart2,
     CreditCard,
     Store,
-    Table2
+    Table2,
+    RollerCoaster
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
-const mainNavItems: NavItem[] = [
+const mainNavItems: NavItemWithSubMenu[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
@@ -40,51 +41,84 @@ const mainNavItems: NavItem[] = [
         title: 'Products',
         href: '/products',
         icon: ShoppingBasket,
+        submenu: [
+            {
+                title: 'Sales & Billing',
+                href: '/sales-billing',
+                icon: Wallet,
+            },
+            {
+                title: 'Inventory Management',
+                href: '/inventory-management',
+                icon: Boxes,
+            },
+        ]
+    },
+    
+    {
+        title: 'Roles',
+        href: '/roles',
+        icon: RollerCoaster,
     },
     {
-        title: 'Sales & Billing',
-        href: '/sales-billing',
-        icon: Wallet,
-    },
-    {
-        title: 'Inventory Management',
-        href: '/inventory-management',
-        icon: Boxes,
-    },
-    {
-        title: 'Invoice & Receipt Generation',
-        href: '/invoice-receipt',
-        icon: FileText,
-    },
-    {
-        title: 'Customer Management (CRM)',
-        href: '/customer-management',
+        title: 'Permissions',
+        href: '/permissions',
         icon: Users,
     },
     {
-        title: 'Employee / Staff Management',
-        href: '/employee-management',
+        title: 'Student Admission',
+        href: '/student-admission',
+        icon: FileText,
+    },
+    {
+        title: 'Student Management',
+        href: '/student-management',
+        icon: Users,
+    },
+    {
+        title: 'Parent Accounts',
+        href: '/parent-accounts',
         icon: UserCog,
     },
     {
-        title: 'Reports & Analytics',
-        href: '/reports-analytics',
+        title: 'Staff Management',
+        href: '/staff-management',
         icon: BarChart2,
     },
     {
-        title: 'Payment Integrations',
-        href: '/payment-integrations',
+        title: 'ID Card Printing',
+        href: '/id-card-printing',
         icon: CreditCard,
     },
     {
-        title: 'Multi-Store / Multi-Branch',
-        href: '/multi-store',
-        icon: Store,
+        title: 'Accountants',
+        href: '/accountants',
+        icon: Wallet,
     },
     {
-        title: 'Table Management (Dine-in)',
-        href: '/table-management',
+        title: 'Parent Complaints',
+        href: '/parent-complaints',
+        icon: FileText,
+    },
+    {
+        title: 'Classes & Sections',
+        href: '/classes-sections',
         icon: Table2,
+    },
+    {
+        title: 'Manage Subjects',
+        href: '/manage-subjects',
+        icon: BookOpen,
+    },
+    {
+        title: 'Manage Attendance',
+        href: '/manage-attendance',
+        icon: BarChart2,
+    },
+    {
+        title: 'Online Classes',
+        href: '/online-classes',
+        icon: Store,
     },
 ];
 

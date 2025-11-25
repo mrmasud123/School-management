@@ -1,6 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\StudentAdmissionController;
+use App\Http\Controllers\Admin\InventoryManagementController;
+use App\Http\Controllers\Admin\ParentAccountsController;
+use App\Http\Controllers\Admin\SalesBillingController;
+use App\Http\Controllers\Admin\StudentManagementController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\RolesController;
+use App\Http\Controllers\Admin\PermissionController;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\ProductController;
@@ -17,34 +24,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+    
     Route::get('/products', [ProductController::class, 'index'])->name('products');
-
-    // Sales & Billing
-    Route::get('/sales-billing', [\App\Http\Controllers\SalesBillingController::class, 'index'])->name('sales.billing');
-
-    // Inventory Management
-    Route::get('/inventory-management', [\App\Http\Controllers\InventoryManagementController::class, 'index'])->name('inventory.management');
-
-    // Invoice & Receipt Generation
-    Route::get('/invoice-receipt', [\App\Http\Controllers\InvoiceReceiptController::class, 'index'])->name('invoice.receipt');
-
-    // Customer Management (CRM)
-    Route::get('/customer-management', [\App\Http\Controllers\CustomerManagementController::class, 'index'])->name('customer.management');
-
-    // Employee / Staff Management
-    Route::get('/employee-management', [\App\Http\Controllers\EmployeeManagementController::class, 'index'])->name('employee.management');
-
-    // Reports & Analytics
-    Route::get('/reports-analytics', [\App\Http\Controllers\ReportsAnalyticsController::class, 'index'])->name('reports.analytics');
-
-    // Payment Integrations
-    Route::get('/payment-integrations', [\App\Http\Controllers\PaymentIntegrationsController::class, 'index'])->name('payment.integrations');
-
-    // Multi-Store / Multi-Branch Support (optional)
-    Route::get('/multi-store', [\App\Http\Controllers\MultiStoreController::class, 'index'])->name('multi.store');
-
-    // Table management (dine-in)
-    Route::get('/table-management', [\App\Http\Controllers\TableManagementController::class, 'index'])->name('table.management');
+    Route::resource('/sales-billing', SalesBillingController::class)->names('sales.billing');
+    Route::resource('/inventory-management', InventoryManagementController::class)->names('inventory.management');
+    Route::resource('/student-admission', StudentAdmissionController::class)->names('admin.student.admission');
+    Route::resource('/student-management', StudentManagementController::class)->names('admin.student');
+    Route::resource('/parent-accounts', ParentAccountsController::class)->names('admin.parent.accounts');
+    Route::get('/staff-management', [\App\Http\Controllers\Admin\StaffManagementController::class, 'index'])->name('admin.staff');
+    Route::get('/id-card-printing', [\App\Http\Controllers\Admin\IDCardPrintingController::class, 'index'])->name('admin.idcard');
+    Route::get('/accountants', [\App\Http\Controllers\Admin\AccountantsController::class, 'index'])->name('admin.accountants');
+    Route::get('/parent-complaints', [\App\Http\Controllers\Admin\ParentComplaintsController::class, 'index'])->name('admin.parent.complaints');
+    Route::get('/classes-sections', [\App\Http\Controllers\Admin\ClassesSectionsController::class, 'index'])->name('admin.classes.sections');
+    Route::get('/manage-subjects', [\App\Http\Controllers\Admin\ManageSubjectsController::class, 'index'])->name('admin.subjects');
+    Route::get('/manage-attendance', [\App\Http\Controllers\Admin\ManageAttendanceController::class, 'index'])->name('admin.attendance');
+    Route::get('/online-classes', [\App\Http\Controllers\Admin\OnlineClassesController::class, 'index'])->name('admin.online.classes');
+    Route::resource('/roles', RolesController::class)->names('admin.roles');
+    Route::resource('/permissions', PermissionController::class)->names('admin.permissions');
+    // Route::post();
+    
+    Route::middleware(['role:teacher'])->group(function() {
+        Route::get('/test', function () {
+            return "Hello Admin";
+        });
+    });
+    
 });
 
 require __DIR__.'/settings.php';
