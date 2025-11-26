@@ -40,6 +40,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/manage-attendance', [\App\Http\Controllers\Admin\ManageAttendanceController::class, 'index'])->name('admin.attendance');
     Route::get('/online-classes', [\App\Http\Controllers\Admin\OnlineClassesController::class, 'index'])->name('admin.online.classes');
     Route::resource('/roles', RolesController::class)->names('admin.roles');
+    Route::get('/add-permission/{id}', [RolesController::class, 'addPermissionToRole'])->name('add.permission');
+    Route::post('/give-permission/{id}', [RolesController::class, 'givePermissionToRole'])->name('give.permission');
     Route::resource('/permissions', PermissionController::class)->names('admin.permissions');
     // Route::post();
     

@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-
+use Illuminate\Support\Facades\DB;
 class RolesController extends Controller
 {
     /**
@@ -14,9 +15,10 @@ class RolesController extends Controller
      */
     public function index()
     {
-        $roles= Role::all();
+        $roles = Role::with('permissions')->get();
+        // $rolePermissions = Permission::all();
         return Inertia::render('roles/Roles', [
-            'roles' => $roles, 
+            'roles' => $roles
         ]);
     }
 
@@ -36,12 +38,12 @@ class RolesController extends Controller
         $request->validate([
             'name' => 'required|string|unique:roles,name',
         ]);
-    
+
         Role::create([
             'name' => $request->name,
             'guard_name' => 'web',
         ]);
-    
+
         return redirect()->back()->with('success', 'Role created successfully!');
     }
 
@@ -50,7 +52,7 @@ class RolesController extends Controller
      */
     public function show(string $id)
     {
-        $role= Role::findOrFail($id);
+        $role = Role::findOrFail($id);
         return response()->json($role);
     }
 
@@ -59,7 +61,8 @@ class RolesController extends Controller
      */
     public function edit(string $id)
     {
-        //
+
+        
     }
 
     /**
@@ -67,14 +70,14 @@ class RolesController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $role= Role::findOrFail($id);
+        $role = Role::findOrFail($id);
         $request->validate([
             'name' => 'required|string|unique:roles,name,' . $role->id,
         ]);
         $role->update([
             'name' => $request->name
         ]);
-    
+
         return redirect()->back()->with('success', 'Role updated successfully!');
     }
 
@@ -82,11 +85,42 @@ class RolesController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-{
-    $role = Role::findOrFail($id);
-    $role->delete();   // <-- correct
-    
-    return redirect()->back()->with('success', 'Role deleted successfully!');
-}
+    {
+        $role = Role::findOrFail($id);
+        $role->delete();  
+
+        return redirect()->back()->with('success', 'Role deleted successfully!');
+    }
+
+    public function addPermissionToRole($id)
+    {
+        $role = Role::findOrFail($id);
+        $permissions = Permission::all();
+
+        // Get currently assigned permissions
+        $rolePermissions = $role->permissions->pluck('id')->toArray();
+
+        return Inertia::render('roles/AddPermission', [
+            'roles' => $role,
+            'permissions' => $permissions,
+            'rolePermissions' => $rolePermissions,
+        ]);
+    }
+
+    // Handle form submission
+    public function givePermissionToRole(Request $request, $id)
+    {
+        $role = Role::findOrFail($id);
+
+        $request->validate([
+            'selectedPermissions' => 'array',
+            'selectedPermissions.*' => 'exists:permissions,id',
+        ]);
+
+        // Sync permissions
+        $role->syncPermissions($request->selectedPermissions ?? []);
+
+        return redirect()->back()->with('success', 'Permissions updated successfully!');
+    }
 
 }

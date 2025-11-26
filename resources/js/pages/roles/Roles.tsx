@@ -7,13 +7,17 @@ import Swal from 'sweetalert2';
 interface Role {
   id: number;
   name: string;
-  guard_name: string;
-  created_at: string;
-  updated_at: string;
+  permissions: Permissions[]; 
+}
+
+interface Permissions{
+  id: number;
+  name: string  
 }
 
 export default function Roles() {
   const { roles } = usePage<{ roles: Role[] }>().props;
+  console.log(roles);
   const handleEdit = (role: Role) => {
     Swal.fire({
       title: "Edit Role",
@@ -92,6 +96,9 @@ export default function Roles() {
                   Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Permissions
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -103,16 +110,36 @@ export default function Roles() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span className="px-2 py-1 bg-yellow-500 rounded-md text-white font-bold">{role.name}</span>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {
+                      role.permissions.length > 0 ? (
+                        role.permissions.map((permission: Permissions) => {
+                          return (
+                            
+                            <span className="px-2 py-1 bg-black me-2 rounded-md text-white font-bold">{permission.name}</span>
+                          )
+                        })
+                      ) : (
+                        <span className="px-2 py-1 bg-red-400 me-2 rounded-md text-white font-bold">No permission</span>
+                      )
+                    }
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex gap-2">
+                    <Link
+                      href={`/add-permission/${role.id}`}
+                      className="cursor-pointer px-3 py-1 bg-pink-600 text-white rounded hover:bg-pink-700"
+                    >
+                      Add permission to role
+                    </Link>
                     <button
                       onClick={() => handleEdit(role)}
-                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      className="cursor-pointer px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(role.id)}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      className="cursor-pointer px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                     >
                       Delete
                     </button>

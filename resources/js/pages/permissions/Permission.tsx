@@ -103,13 +103,13 @@ export default function Permission() {
                     <button
                       // onClick={handleEdit(perm)}
                       onClick={() => handleEdit(perm)}
-                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      className="cursor-pointer px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(perm.id)}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      className="cursor-pointer px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                     >
                       Delete
                     </button>

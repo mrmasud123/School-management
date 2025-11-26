@@ -16,11 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 export default function StudentAdmission() {
-    const { auth } = usePage().props as {
-        auth: { id: number; name: string; email: string; roles: string[]; permissions: string[] } | null;
-    };
-
-    console.log(auth?? null);
+ 
     const form = useForm({
         first_name: "",
         last_name: "",
