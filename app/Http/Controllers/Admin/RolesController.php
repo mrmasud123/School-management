@@ -15,7 +15,7 @@ class RolesController extends Controller
      */
     public function index()
     {
-        $roles = Role::with('permissions')->get();
+        $roles = Role::with('permissions')->orderBy('id', 'desc')->get();
         // $rolePermissions = Permission::all();
         return Inertia::render('roles/Roles', [
             'roles' => $roles

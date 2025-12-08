@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Admin\StudentAdmissionController;
+use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\InventoryManagementController;
 use App\Http\Controllers\Admin\ParentAccountsController;
 use App\Http\Controllers\Admin\SalesBillingController;
@@ -8,6 +8,9 @@ use App\Http\Controllers\Admin\StudentManagementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RolesController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\SectionController;
+use App\Http\Controllers\Admin\StudentClassController;
+use App\Http\Controllers\Admin\UserController;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\ProductController;
@@ -16,7 +19,6 @@ Route::get('/', function () {
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
     ]);
-    return Inertia::render('test');
 })->name('home');
 
 
@@ -24,11 +26,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
-    
+
     Route::get('/products', [ProductController::class, 'index'])->name('products');
     Route::resource('/sales-billing', SalesBillingController::class)->names('sales.billing');
     Route::resource('/inventory-management', InventoryManagementController::class)->names('inventory.management');
-    Route::resource('/student-admission', StudentAdmissionController::class)->names('admin.student.admission');
+    Route::resource('/students', StudentController::class)->names('admin.students');
+    Route::get('/migrate', [StudentController::class, 'migrate'])->name('admin.students.migrate');
+    Route::resource('/classes', StudentClassController::class)->names('admin.classes');
+    Route::get('/classes/class-wise-students/{classId}', [StudentClassController::class,'classWiseStudents'])->name('class.wise.students');
+
+    Route::resource('/sections', SectionController::class)->names('admin.sections');
+    Route::get('/fetch-sections-student-admission/{classId}', [SectionController::class, 'fetchSections'])->name('fetch.sections');
+    Route::get('/sections/section-wise-students/{sectionId}', [SectionController::class,'sectionWiseStudents'])->name('section.wise.students');
+
     Route::resource('/student-management', StudentManagementController::class)->names('admin.student');
     Route::resource('/parent-accounts', ParentAccountsController::class)->names('admin.parent.accounts');
     Route::get('/staff-management', [\App\Http\Controllers\Admin\StaffManagementController::class, 'index'])->name('admin.staff');
@@ -43,14 +53,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/add-permission/{id}', [RolesController::class, 'addPermissionToRole'])->name('add.permission');
     Route::post('/give-permission/{id}', [RolesController::class, 'givePermissionToRole'])->name('give.permission');
     Route::resource('/permissions', PermissionController::class)->names('admin.permissions');
+
+    Route::resource('/users', UserController::class)->names('admin.users');
+
     // Route::post();
-    
+
     Route::middleware(['role:teacher'])->group(function() {
         Route::get('/test', function () {
             return "Hello Admin";
         });
     });
-    
+
 });
 
 require __DIR__.'/settings.php';

@@ -106,25 +106,27 @@ export default function Roles() {
             <tbody className="bg-white divide-y divide-gray-200">
               {roles.map((role) => (
                 <tr key={role.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{role.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 text-sm text-gray-500">{role.id}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900 w-50">
                     <span className="px-2 py-1 bg-yellow-500 rounded-md text-white font-bold">{role.name}</span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 text-sm text-gray-500-900 ">
+                  <div  className="flex flex-wrap flex-row items-center gap-3">
                     {
                       role.permissions.length > 0 ? (
                         role.permissions.map((permission: Permissions) => {
                           return (
                             
-                            <span className="px-2 py-1 bg-black me-2 rounded-md text-white font-bold">{permission.name}</span>
-                          )
-                        })
-                      ) : (
-                        <span className="px-2 py-1 bg-red-400 me-2 rounded-md text-white font-bold">No permission</span>
-                      )
-                    }
+                              <span key={permission.id} className="px-2 py-1 bg-black me-2 rounded-md text-white font-bold">{permission.name}</span>
+                            )
+                          })
+                        ) : (
+                          <span className="px-2 py-1 bg-red-400 me-2 rounded-md text-white font-bold">No permission</span>
+                        )
+                      }
+                      </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex gap-2">
+                  <td className="px-6 py-4 text-sm text-gray-900 flex gap-2 w-100">
                     <Link
                       href={`/add-permission/${role.id}`}
                       className="cursor-pointer px-3 py-1 bg-pink-600 text-white rounded hover:bg-pink-700"

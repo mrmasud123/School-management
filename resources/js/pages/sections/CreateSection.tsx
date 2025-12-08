@@ -1,0 +1,148 @@
+import { Head, router, useForm, Link } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import toast from 'react-hot-toast';
+import { Input } from '@/components/ui/input';
+
+export default function CreateSection({ classes }) {
+
+    console.log(classes)
+    const form = useForm({
+        section_name: '',
+        class_id: 0,
+        capacity: 0,
+    });
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        console.log("Form Submitted");
+        console.log(form);
+        router.post('/sections', {
+            section_name: form.data.section_name,
+            class_id: form.data.class_id,
+            capacity: form.data.capacity,
+        },
+            {
+                onStart: () => setLoading(true),
+                onFinish: () => setLoading(false),
+                onSuccess: (data) => {
+                    setLoading(false);
+                    form.reset();
+                    console.log(data);
+                    toast.success("Section created successfully!");
+                    window.location.href = "/sections";
+                },
+                onError: (err) => {
+                    setLoading(false);
+                    console.log(err);
+                    toast.error(Object.values(err)[0] as string);
+                }
+            }
+        )
+    };
+
+    return (
+        <AppLayout breadcrumbs={[{ title: 'Create Section', href: '/classes' }]}>
+            <Head title="Create Section" />
+
+            <div className="flex flex-col gap-6 p-6">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-bold">Create Section</h1>
+                    <Link href={'/sections'} className="px-2 py-1 text-sm bg-green-600 rounded-md text-white cursor-pointer">All sections</Link>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="space-y-10">
+                        <section className="border rounded-lg p-6 space-y-4 bg-card">
+                            <h2 className="text-xl font-semibold">Enter the section name</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                                <div className="flex flex-col">
+                                    <label className="mb-1 font-medium text-sm text-muted-foreground">Section Name</label>
+                                    <Input
+                                        type="text"
+                                        placeholder='Enter section name'
+                                        value={form.data.section_name}
+                                        onChange={e => form.setData('section_name', e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <label className="mb-1 font-medium text-sm text-muted-foreground">Class Name</label>
+                                    <Select
+                                        onValueChange={value => form.setData('class_id', Number(value))}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select class" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {
+                                                classes?.length > 0 ? (
+                                                    classes?.map((cls: Object) => {
+                                                        return <SelectItem key={cls.id} value={`${cls.id ?? '0'}`}>{cls.name ?? 'N/A'}</SelectItem>
+                                                    })
+                                                ) : (
+                                                    <SelectItem value="0">No Classes Found</SelectItem>
+                                                )
+                                            }
+
+
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex flex-col">
+                                    <label className="mb-1 font-medium text-sm text-muted-foreground">Total Students</label>
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        value={form.data.capacity}
+                                        onChange={e => form.setData('capacity', Number(e.target.value))}
+                                    />
+                                </div>
+                            </div>
+                        </section>
+
+                        <div className="">
+                            <Button
+                                type="submit"
+                                disabled={loading}
+                                className="flex cursor-pointer items-center gap-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                            >
+                                {loading ? (
+                                    <>
+                                        <svg
+                                            className="animate-spin h-5 w-5 text-white"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            ></circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                            ></path>
+                                        </svg>
+                                        Saving...
+                                    </>
+                                ) : (
+                                    "Create section"
+                                )}
+                            </Button>
+                        </div>
+
+                    </div>
+                </form>
+
+            </div>
+        </AppLayout>
+    );
+}

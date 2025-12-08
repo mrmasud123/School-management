@@ -38,23 +38,32 @@ const mainNavItems: NavItemWithSubMenu[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Products',
-        href: '/products',
+        title: 'Institution',
+        href: '',
         icon: ShoppingBasket,
         submenu: [
             {
-                title: 'Sales & Billing',
-                href: '/sales-billing',
+                title: 'Classes',
+                href: '/classes',
                 icon: Wallet,
             },
             {
-                title: 'Inventory Management',
-                href: '/inventory-management',
+                title: 'Students',
+                href: '/students',
+                icon: Users,
+            },
+            {
+                title: 'Sections',
+                href: '/sections',
+                icon: Boxes,
+            },{
+                title: 'Migrate Students',
+                href: '/migrate',
                 icon: Boxes,
             },
         ]
     },
-    
+
     {
         title: 'Roles',
         href: '/roles',
@@ -66,9 +75,9 @@ const mainNavItems: NavItemWithSubMenu[] = [
         icon: Users,
     },
     {
-        title: 'Student Admission',
-        href: '/student-admission',
-        icon: FileText,
+        title: 'Users',
+        href: '/users',
+        icon: Users,
     },
     {
         title: 'Student Management',
