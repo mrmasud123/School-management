@@ -1,67 +1,81 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { X } from "lucide-react";
 
-export default function AdmitStudent({ classes }) {
-    console.log(classes)
-
+export default function EditStudent({ classes,all_section,student }) {
+    const baseURL= import.meta.env.VITE_APP_URL;
     const form = useForm({
-        first_name: "",
-        last_name: "",
-        dob: "",
-        gender: "",
-        blood_group: "",
-        nationality: "",
-        religion: "",
-        photo: {},
-        email: "",
-        current_address: "",
-        class_id: 0,
-        section_id: 0,
-        previous_school: "",
-        admission_date: "",
-        academic_year: "",
-        roll_no: "",
-        father_name: "",
-        father_occupation: "",
-        mother_name: "",
-        mother_occupation: "",
-        guardian_relation: "",
-        guardian_phone: "",
-        status: "pending",
-        admission_no: "",
+        first_name: student?.first_name || "",
+        last_name: student?.last_name || "",
+        dob: student?.dob ||"",
+        gender: student?.gender,
+        blood_group: student?.blood_group ||"",
+        nationality: student?.nationality ||"",
+        religion: student?.religion ||"",
+        photo: null,
+        email: student?.email ||"",
+        current_address: student?.address ||"",
+        class_id: student?.class_id || 0,
+        section_id: student?.section_id || 0,
+        previous_school: student?.previous_school ||"",
+        admission_date: student?.admission_date ||"",
+        academic_year: student?.academic_year ||"",
+        roll_no: student?.roll_no ||"",
+        father_name: student?.father_name ||"",
+        father_occupation: student?.father_occupation ||"",
+        mother_name: student?.mother_name ||"",
+        mother_occupation: student?.mother_occupation ||"",
+        guardian_relation: student?.guardian_relation ||"",
+        guardian_phone: student?.guardian_phone ||"",
+        status: student?.status || "pending",
+        admission_no: student?.admission_no ||"",
     });
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [existingImage, setExistingImage] = useState(student?.photo || null);
     const [loading, setLoading]= useState(false);
     const [sections, setSections] = useState<Section[]>([]);
     const [loadSection, setLoadSection] = useState(false);
-    const handleSubmit = (e: React.FormEvent) => {
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Form Submitted");
-        console.log(form);
-        router.post('/students', form.data,{
-            forceFormData: true,
-            onStart: () => setLoading(true),
-            onFinish: () => setLoading(false),
-            onSuccess: () => {
-                setLoading(false);
-                toast.success("Student created successfully!");
-                form.reset();
-                window.location.href = "/students";
-            },
-            onError: (err) => {
-                setLoading(false);
-                console.log(err);
-                toast.error(Object.values(err)[0] as string);
+        setLoading(true);
+
+        const formData = new FormData();
+
+        Object.entries(form.data).forEach(([key, value]) => {
+            if (value !== null) {
+                formData.append(key, value);
             }
         });
+        formData.append("_method", "PUT");
+
+        try {
+            const id= student?.id;
+            const response = await axios.post(`/students/${id}`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+
+            console.log(response.data);
+            toast.success("Student updated successfully!");
+            window.location.href="/students";
+
+        } catch (err) {
+            console.log(err);
+            toast.error(Object.values(err?.response?.data?.errors)[0]);
+        } finally {
+            setLoading(false);
+        }
     };
+
 
     const handleChange =async (value: string) => {
         form.setData('class_id', Number(value));
@@ -81,24 +95,17 @@ export default function AdmitStudent({ classes }) {
         }
     };
 
+    useEffect(() => {
+        console.log(all_section.filter(sec => sec.class_id === form.data.class_id));
+        setSections(all_section.filter(sec => sec.class_id === form.data.class_id));
+    }, []);
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Student Admission', href: '/student-admission' }]}>
             <Head title="Student Admission" />
-                <div className="p-8">
-                    <h1 className="text-3xl font-bold">Student Admission</h1>
-
-                    <p className="text-muted-foreground mb-4">Fill out the form below to register a new student.</p>
-                    <Link
-                        href={`/students`}
-                        className="cursor-pointer px-3 py-2  bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 "
-                    >
-                        View All Student
-                    </Link>
-                </div>
 
             <div className="flex flex-col gap-6 p-6">
-
+                <h1 className="text-2xl font-bold mb-4">Edit <span className={`bg-green-500 text-white d rounded-md px-3 py-1`}>{student?.first_name} {student?.last_name}</span> record</h1>
 
                 <form onSubmit={handleSubmit} encType={"multipart/form-data"}>
                     <div className="space-y-10">
@@ -200,7 +207,7 @@ export default function AdmitStudent({ classes }) {
                                                 const previewUrl = URL.createObjectURL(file as File);
                                                 setPhotoPreview(previewUrl);
                                             } else {
-                                                form.setData('photo', {});
+                                                form.setData('photo', null);
                                                 setPhotoPreview(null);
                                             }
                                         }}
@@ -213,6 +220,23 @@ export default function AdmitStudent({ classes }) {
                                             className="mt-3 w-40 h-40 object-cover rounded-md border"
                                         />
                                     )}
+
+                                    {student?.photo && existingImage && (
+                                        <div className="relative mt-3 w-40 h-40">
+                                            <img
+                                                className="object-cover rounded-md border h-full w-full"
+                                                src={`${baseURL}/storage/${student.photo}`}
+                                                alt=""
+                                            />
+
+                                            <X
+                                                onClick={() => setExistingImage(null)}
+                                                className="w-7 h-7 absolute top-0 right-0 rounded-full cursor-pointer bg-red-500 text-white p-1"
+                                            />
+                                        </div>
+                                    )}
+
+
                                 </div>
                             </div>
                         </section>
@@ -242,7 +266,6 @@ export default function AdmitStudent({ classes }) {
                             </div>
                         </section>
 
-                        {/* Academic Information */}
                         <section className="border rounded-lg p-6 space-y-4 bg-card">
                             <h2 className="text-xl font-semibold">Academic Information</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -305,7 +328,7 @@ export default function AdmitStudent({ classes }) {
                                     <Select
                                         value={form.data.section_id ? form.data.section_id.toString() : undefined}
                                         onValueChange={(v) => form.setData('section_id', Number(v))}
-                                        disabled={loadSection || sections.length === 0}
+                                        // disabled={loadSection || sections.length === 0}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select Section" />
@@ -334,17 +357,6 @@ export default function AdmitStudent({ classes }) {
                                     </Select>
 
                                 </div>
-
-                                {/*<div className="flex flex-col">*/}
-                                {/*    <label className="mb-1 font-medium text-sm text-muted-foreground">*/}
-                                {/*        Section*/}
-                                {/*        {loadSection && (*/}
-                                {/*            <svg className="animate-spin h-5 w-5 inline ml-2 text-gray-700" />*/}
-                                {/*            )}*/}
-                                {/*    </label>*/}
-
-                                {/*    */}
-                                {/*</div>*/}
 
 
                                 <div className="flex flex-col">
@@ -439,7 +451,7 @@ export default function AdmitStudent({ classes }) {
                             </div>
                         </section>
 
-                        {/* System Details */}
+
                         <section className="border rounded-lg p-6 space-y-4 bg-card">
                             <h2 className="text-xl font-semibold">System Details</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

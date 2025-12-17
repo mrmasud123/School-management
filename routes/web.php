@@ -27,11 +27,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
+    Route::get('/students/idcard/{id}', [\App\Http\Controllers\Admin\IDCardPrintingController::class, 'generateIdCard'])
+        ->name('students.idcard');
+
     Route::get('/products', [ProductController::class, 'index'])->name('products');
     Route::resource('/sales-billing', SalesBillingController::class)->names('sales.billing');
     Route::resource('/inventory-management', InventoryManagementController::class)->names('inventory.management');
     Route::resource('/students', StudentController::class)->names('admin.students');
+    Route::get('/trashed-students', [StudentController::class, 'trashed'])->name('trashed.students');
+    Route::patch('/{id}/restore', [StudentController::class, 'restore'])
+        ->name('students.restore');
+
+    Route::delete('/{id}/force', [StudentController::class, 'forceDelete'])
+        ->name('students.forceDelete');
+
     Route::get('/migrate', [StudentController::class, 'migrate'])->name('admin.students.migrate');
+    Route::post('/migrate', [StudentController::class, 'migrateStudent'])->name('admin.students.migrate');
     Route::resource('/classes', StudentClassController::class)->names('admin.classes');
     Route::get('/classes/class-wise-students/{classId}', [StudentClassController::class,'classWiseStudents'])->name('class.wise.students');
 

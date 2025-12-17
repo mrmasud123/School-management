@@ -23,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
 
 public function boot(): void
 {
+    date_default_timezone_set('Asia/Dhaka');
     // Inertia::share([
     //     'auth' => function () {
     //         $user = Auth::user();
@@ -34,8 +35,8 @@ public function boot(): void
     //             'id' => $user->id,
     //             'name' => $user->name,
     //             'email' => $user->email,
-    //             'roles' => $user->getRoleNames()->toArray(),          
-    //             'permissions' => $user->getAllPermissions()->pluck('name')->toArray(), 
+    //             'roles' => $user->getRoleNames()->toArray(),
+    //             'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
     //         ];
     //     },
     // ]);

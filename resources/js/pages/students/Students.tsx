@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import AppLayout from '@/layouts/app-layout';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { Button } from '@/components/ui/button';
 
 export default function Students({students}) {
     console.log(students);
@@ -18,10 +20,27 @@ export default function Students({students}) {
   const filteredUsers = students.filter(
     student =>
       student.id.toString().includes(filterText) ||
-      (student.name && student.name.toLowerCase().includes(filterText.toLowerCase())) ||
-      (student.email && student.email.toLowerCase().includes(filterText.toLowerCase()))
+      (student.first_name && student.first_name.toLowerCase().includes(filterText.toLowerCase())) ||
+      (student.last_name && student.last_name.toLowerCase().includes(filterText.toLowerCase()))
   );
+    const downloadIdCard = (id) => {
+        window.open(`/students/idcard/${id}`, "_blank");
+    };
 
+    const handleDelete =(studentId:number)=>{
+
+        router.delete(`students/${studentId}`,{
+            onSuccess:(data)=>{
+                console.log(data);
+            },
+            onFinish:()=>{
+                console.log("Fininshed!");
+            },
+            onError:(errors)=>{
+                console.log(errors);
+            },
+        });
+    }
     const columns: TableColumn<[]>[] = [
     // { name: 'ID', selector: row => row.id, sortable: true },
     {
@@ -36,7 +55,7 @@ export default function Students({students}) {
 
     {
         name: 'Class Level',
-        center:true,
+        // center:true,
         cell: row => (
             <span className={'p-2 bg-blue-500 text-white text-xs rounded-md'}>CLASS {row.student_class?.name}</span>
         ),
@@ -50,6 +69,7 @@ export default function Students({students}) {
         sortable: true },
         {
             name : 'Admission Status',
+            width:'150px',
             cell: row => (
                 <Select
                     value={row.status}
@@ -83,31 +103,36 @@ export default function Students({students}) {
         {
       name: 'Action',
 
-      cell: row => (
-        <div className="flex gap-2">
-          <Link
+            cell: row => (
+                <div className="flex gap-2">
+                    <Link
+                        href={`/students/${row.id}/edit`}
+                        className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200"
+                    >
+                        Edit
+                    </Link>
 
-            href={`/users/${row.id}/edit`}
-            className="cursor-pointer px-3 py-2 bg-blue-500 text-white rounded-md"
-          >
-            Edit
-          </Link>
+                    <Button
+                        className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+                        onClick={() => downloadIdCard(row.id)}
+                    >
+                        Download ID Card
+                    </Button>
 
-          <button
-            onClick={() => alert(`Delete user ${row.id}`)}
-            className="cursor-pointer px-3 py-2 bg-red-500 text-white rounded-md"
-          >
-            Delete
-          </button>
+                    <button
+                        onClick={()=> handleDelete(row.id)}
+                        className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
+                    >
+                        Delete
+                    </button>
+                </div>
+            ),
 
-        </div>
-      ),
-      sortable: false,
-      width: '300px',
+            sortable: false,
+      width: '350px',
     },
 
   ];
-
 
   return (
     <AppLayout breadcrumbs={[{ title: 'Students', href: '/students' }]}>
@@ -121,13 +146,21 @@ export default function Students({students}) {
             Admit Student
           </Link>
 
-           <input
-            type="text"
-            placeholder="Search by ID, name, or email"
-            value={filterText}
-            onChange={e => setFilterText(e.target.value)}
-            className="p-2 border border-gray-300 rounded"
-          />
+            <div className="flex items-center">
+                <Link
+                    href={`/trashed-students`}
+                    className="cursor-pointer px-3 py-1 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50 me-2"
+                >
+                    View trashed students
+                </Link>
+                <input
+                    type="text"
+                    placeholder="Search by ID, name, or email"
+                    value={filterText}
+                    onChange={e => setFilterText(e.target.value)}
+                    className="px-3 py-1  border border-gray-300 rounded"
+                />
+            </div>
         </div>
 
 

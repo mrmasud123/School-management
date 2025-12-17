@@ -1,73 +1,66 @@
 import React, { useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import AppLayout from '@/layouts/app-layout';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import toast from 'react-hot-toast';
-export default function ClassWiseStudents({students,stdntClass}) {
-    console.log(students,stdntClass);
+
+import { Button } from '@/components/ui/button';
+
+export default function Trashed({students}) {
+    console.log(students);
     const baseURL= import.meta.env.VITE_APP_URL;
-    // const updateStatus = (id, status) => {
-    //     router.put(`/students/${id}/status`, { status }, {
-    //         onSuccess: () => toast.success("Status updated"),
-    //         onError: () => toast.error("Update failed")
-    //     });
-    // };
     const [filterText, setFilterText] = useState('');
 
     const filteredUsers = students.filter(
         student =>
             student.id.toString().includes(filterText) ||
-            (
-                student.first_name && student.first_name.toLowerCase().includes(filterText.toLowerCase())) ||(student.last_name && student.last_name.toLowerCase().includes(filterText.toLowerCase())
-                || (student?.sections?.name && student?.sections?.name.toLowerCase().includes(filterText.toLowerCase()))
-            )
+            (student.first_name && student.first_name.toLowerCase().includes(filterText.toLowerCase())) ||
+            (student.last_name && student.last_name.toLowerCase().includes(filterText.toLowerCase()))
     );
 
+    const handleForceDelete =(studentId:number)=>{
+
+        router.delete(`/${studentId}/force`,{
+            onSuccess:(data)=>{
+                console.log(data);
+            },
+            onFinish:()=>{
+                console.log("Fininshed!");
+            },
+            onError:(errors)=>{
+                console.log(errors);
+            },
+        });
+    }
+
+    const handleRestore =(studentId)=>{
+        router.patch(`/${studentId}/restore`,{
+            onSuccess:(data)=>{
+                console.log(data);
+            },
+            onFinish:()=>{
+                console.log("Fininshed!");
+            },
+            onError:(errors)=>{
+                console.log(errors);
+            },
+        });
+    }
     const columns: TableColumn<[]>[] = [
         // { name: 'ID', selector: row => row.id, sortable: true },
         {
             name: 'Name',
             cell: row => `${row.first_name} ${row.last_name}`,
-            sortable: true
-        },
-        {
-            name: 'Admission No',
-            sortable: true,
-            cell: (row) => {
-                const value = row.admission_no;
-
-                const handleCopy = () => {
-                    // extract digits only
-                    const integerPart = value.replace(/\D/g, '');
-
-                    if (integerPart) {
-                        navigator.clipboard.writeText(integerPart);
-                        toast.success("Admission Number Copied!");
-                    }
-                };
-
-                return (
-                    <span
-                        onClick={handleCopy}
-                        className="cursor-pointer text-blue-600 hover:underline"
-                        title="Click to copy admission number"
-                    >
-                {value}
-            </span>
-                );
-            },
-        }
-        ,
-
+            sortable: true },
         {
             name: 'Guardian Contact',
             cell: row => row.guardian_phone,
             sortable: false,
         },
+
         {
             name: 'Class Level',
-            center:true,
+            // center:true,
             cell: row => (
                 <span className={'p-2 bg-blue-500 text-white text-xs rounded-md'}>CLASS {row.student_class?.name}</span>
             ),
@@ -76,11 +69,12 @@ export default function ClassWiseStudents({students,stdntClass}) {
             name: 'Section',
             // center:true,
             cell: row => (
-                <span className={'p-2 bg-pink-500 text-white text-xs rounded-md'}>{row.sections?.name}</span>
+                <span className={'p-2 bg-pink-500 text-white text-xs rounded-md'}>{row.section?.name}</span>
             ),
             sortable: true },
         {
             name : 'Admission Status',
+            width:'150px',
             cell: row => (
                 <Select
                     value={row.status}
@@ -110,32 +104,60 @@ export default function ClassWiseStudents({students,stdntClass}) {
             )
         },
 
+
+        {
+            name: 'Action',
+
+            cell: row => (
+                <div className="flex gap-2">
+
+                    <button
+                        onClick={()=> handleRestore(row.id)}
+                        className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200"
+                    >
+                        Restore
+                    </button>
+                    <button
+                        onClick={()=> handleForceDelete(row.id)}
+                        className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
+                    >
+                        Delete
+                    </button>
+                </div>
+            ),
+            sortable: false,
+            width:"250px",
+        },
+
     ];
 
-
     return (
-        <AppLayout breadcrumbs={[{ title: 'Students', href: '/students' }]}>
+        <AppLayout breadcrumbs={[{ title: 'Trashed students', href: '/trashed-students' }]}>
             <div className="p-8">
-                <h1 className="text-2xl font-bold mb-4">Class <span className={`bg-green-500 rounded-md px-3 py-1`}>{stdntClass?.name}</span> students</h1>
-
+                <h1 className="text-2xl font-bold mb-4">Trashed Students</h1>
                 <div className="flex items-center gap-4 mb-4 justify-between">
                     <Link
-                        href={`/classes`}
+                        href={`/students`}
                         className="cursor-pointer px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                     >
-                        View Classes
+                        View All Student
                     </Link>
 
-                    <input
-                        type="text"
-                        placeholder="Search by ID, name, or email"
-                        value={filterText}
-                        onChange={e => setFilterText(e.target.value)}
-                        className="p-2 border border-gray-300 rounded"
-                    />
+                    <div className="flex items-center">
+
+                        <input
+                            type="text"
+                            placeholder="Search by ID, name, or email"
+                            value={filterText}
+                            onChange={e => setFilterText(e.target.value)}
+                            className="px-3 py-1  border border-gray-300 rounded"
+                        />
+                    </div>
                 </div>
+
+
                 <DataTable
-                    title="Student List"
+                    title="Trashed Student List"
                     columns={columns}
                     data={filteredUsers}
                     pagination

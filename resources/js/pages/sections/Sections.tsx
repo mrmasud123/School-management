@@ -2,22 +2,7 @@ import React, { useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import AppLayout from '@/layouts/app-layout';
 import { Link } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import Swal from 'sweetalert2';
-import { Input } from '@/components/ui/input';
-// interface User {
-//   id: number;
-//   name: string;
-//   email: string;
-//   roles: Role[];
-// }
-// interface Role {
-//   id: number;
-//   name: string;
-// }
-// interface Props {
-//   users: User[];
-// }
+
 interface Sections{
     all_class : [];
     capacity:number;
@@ -51,7 +36,7 @@ export default function Sections({sections}) {
           },
 
     { name: 'Class Level', cell: row => (
-        <span className='p-2 rounded-md text-white bg-yellow-500'>{row.all_class?.name ?? 'N/A'}</span>
+        <span className='p-2 rounded-md text-white bg-yellow-500'>Class {row.all_class?.name ?? 'N/A'}</span>
         ) , sortable: true },
         { name: 'Section Capacity', cell: row => (
         <span className='p-2 rounded-md text-white bg-sky-700'>{row.capacity ?? 'N/A'}</span>

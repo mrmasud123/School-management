@@ -93,7 +93,7 @@ export function NavMain({ items = [] }: { items: NavItemWithSubMenu[] }) {
                                                 >
                                                     <Link href={sub.href} prefetch className="flex items-center gap-2">
                                                         {sub.icon && (
-                                                            <sub.icon />
+                                                            <sub.icon className={subActive? "!text-white":"!text-black"}/>
                                                         )}
                                                         <span>{sub.title}</span>
                                                     </Link>

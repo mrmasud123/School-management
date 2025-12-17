@@ -48,31 +48,16 @@ export default function Classes({classes}) {
 
       cell: row => (
         <div className="flex gap-2">
-          {/*<Link*/}
-
-          {/*  href={`/users/${row.id ?? '0'}/edit`}*/}
-          {/*  className="cursor-pointer px-3 py-2 bg-blue-500 text-white rounded-md"*/}
-          {/*>*/}
-          {/*  Edit*/}
-          {/*</Link>*/}
             <Link
-
                 href={`/classes/class-wise-students/${row.id}`}
                 className="cursor-pointer px-3 py-2 bg-yellow-500 text-white rounded-md"
             >
                 View Students
             </Link>
-          <button
-            onClick={() => alert(`Delete user ${row.id ?? '0'}`)}
-            className="cursor-pointer px-3 py-2 bg-red-500 text-white rounded-md"
-          >
-            Delete
-          </button>
-
         </div>
       ),
       sortable: false,
-      width: '300px',
+      // width: '300px',
     },
 
   ];
@@ -101,13 +86,28 @@ export default function Classes({classes}) {
 
 
         <DataTable
-          title="User List"
+          title="All Classes"
           columns={columns}
           data={filteredUsers}
           pagination
           selectableRows
           highlightOnHover
           pointerOnHover
+          customStyles={{
+              header: {
+                  style:{
+                  borderTopLeftRadius:"10px",
+                  borderTopRightRadius: "10px"
+                }
+              },
+                  pagination: {
+                  style: {
+                  borderBottomLeftRadius: '10px',
+                  borderBottomRightRadius: '10px',
+                  overflow: 'hidden',
+              },
+            },
+          }}
         />
       </div>
     </AppLayout>
