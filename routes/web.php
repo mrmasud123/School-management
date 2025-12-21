@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\UserController;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Admin\SubjectsController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -49,6 +50,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/sections', SectionController::class)->names('admin.sections');
     Route::get('/fetch-sections-student-admission/{classId}', [SectionController::class, 'fetchSections'])->name('fetch.sections');
     Route::get('/sections/section-wise-students/{sectionId}', [SectionController::class,'sectionWiseStudents'])->name('section.wise.students');
+    Route::get('/sections-wise-subjects/{sectionId}', [SubjectsController::class, 'sectionsWiseSubjects'])->name('sections.wise.subjects');
+    Route::delete('/subject-mapping/{sectionId}/{subjectId}', [SubjectsController::class, 'subjectMapping'])->name('subject.mapping');
+
+    Route::get('/subjects/assign', [SubjectsController::class, 'assignSubject'])->name('admin.subjects.assign');
+    Route::post('/subject-mapping', [SubjectsController::class, 'mapSubject'])->name('admin.subjects.mapping');
+    Route::resource('/subjects', SubjectsController::class)->names('admin.subjects');
 
     Route::resource('/student-management', StudentManagementController::class)->names('admin.student');
     Route::resource('/parent-accounts', ParentAccountsController::class)->names('admin.parent.accounts');
@@ -57,7 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/accountants', [\App\Http\Controllers\Admin\AccountantsController::class, 'index'])->name('admin.accountants');
     Route::get('/parent-complaints', [\App\Http\Controllers\Admin\ParentComplaintsController::class, 'index'])->name('admin.parent.complaints');
     Route::get('/classes-sections', [\App\Http\Controllers\Admin\ClassesSectionsController::class, 'index'])->name('admin.classes.sections');
-    Route::get('/manage-subjects', [\App\Http\Controllers\Admin\ManageSubjectsController::class, 'index'])->name('admin.subjects');
+
     Route::get('/manage-attendance', [\App\Http\Controllers\Admin\ManageAttendanceController::class, 'index'])->name('admin.attendance');
     Route::get('/online-classes', [\App\Http\Controllers\Admin\OnlineClassesController::class, 'index'])->name('admin.online.classes');
     Route::resource('/roles', RolesController::class)->names('admin.roles');

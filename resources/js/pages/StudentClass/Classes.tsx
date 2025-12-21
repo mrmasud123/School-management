@@ -52,7 +52,7 @@ export default function Classes({classes}) {
                 href={`/classes/class-wise-students/${row.id}`}
                 className="cursor-pointer px-3 py-2 bg-yellow-500 text-white rounded-md"
             >
-                View Students
+                Class Details
             </Link>
         </div>
       ),

@@ -63,7 +63,11 @@ const mainNavItems: NavItemWithSubMenu[] = [
             },
         ]
     },
-
+    {
+        title: 'Subjects',
+        href: '/subjects',
+        icon: BookOpen,
+    },
     {
         title: 'Roles',
         href: '/roles',
@@ -114,11 +118,7 @@ const mainNavItems: NavItemWithSubMenu[] = [
         href: '/classes-sections',
         icon: Table2,
     },
-    {
-        title: 'Manage Subjects',
-        href: '/manage-subjects',
-        icon: BookOpen,
-    },
+
     {
         title: 'Manage Attendance',
         href: '/manage-attendance',

@@ -106,8 +106,9 @@ class SectionController extends Controller
     }
 
     public function sectionWiseStudents($sectionId){
+        $subjects= Section::with('subjects')->find($sectionId);
         $students= Student::with('studentClass','section')->orderByDesc('id')->where('section_id', $sectionId)->get();
         $section= Section::findOrFail($sectionId);
-        return Inertia::render('sections/Students', ['students' => $students,'section' =>$section]);
+        return Inertia::render('sections/Students', ['students' => $students,'section' =>$section, 'subjects' => $subjects]);
     }
 }

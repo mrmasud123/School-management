@@ -115,8 +115,10 @@ export default function ClassWiseStudents({students,stdntClass}) {
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Students', href: '/students' }]}>
+   
+            
             <div className="p-8">
-                <h1 className="text-2xl font-bold mb-4">Class <span className={`bg-green-500 rounded-md px-3 py-1`}>{stdntClass?.name}</span> students</h1>
+                <h1 className="text-2xl font-bold mb-4">Class <span className={`bg-green-500 text-white dark:text-white rounded-md px-3 py-1`}>{stdntClass?.name}</span> students</h1>
 
                 <div className="flex items-center gap-4 mb-4 justify-between">
                     <Link
@@ -134,6 +136,40 @@ export default function ClassWiseStudents({students,stdntClass}) {
                         className="p-2 border border-gray-300 rounded"
                     />
                 </div>
+                
+                <div className="">
+            <h1 className="text-2xl font-bold mb-4">Assigned Sections</h1>
+
+                {stdntClass.sections?.length === 0 ? (
+                    <p className="text-gray-500">
+                        No section assigned to this class.
+                    </p>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {stdntClass.sections?.map((section) => (
+                            <div
+                                key={section.id}
+                                className="rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition"
+                            >
+                                <h3 className="text-lg font-bold text-gray-800">
+                                    {section.name}
+                                </h3>
+
+                                <span className="inline-block mt-2 text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                    Active
+                                </span>
+
+                                <p className="mt-3 text-xs text-gray-500">
+                                    Assigned on{' '}
+                                    {new Date(
+                                        section.created_at
+                                    ).toLocaleDateString()}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
                 <DataTable
                     title="Student List"
                     columns={columns}

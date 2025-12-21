@@ -90,7 +90,7 @@ class StudentClassController extends Controller
 
     public function classWiseStudents($classId){
 //        $students= Student::with('studentClass.section')->orderByDesc('id')->where('class_id', $classId)->get();
-        $stdntClass= SchoolClass::findOrFail($classId);
+        $stdntClass= SchoolClass::with('sections')->findOrFail($classId);
         $students=Student::with('sections')->where('class_id', $classId)->get();
         return Inertia::render('StudentClass/ClassWiseStudents', ['students' =>$students, 'stdntClass'=>$stdntClass]);
     }

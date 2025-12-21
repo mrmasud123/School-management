@@ -56,7 +56,7 @@ export default function Sections({sections}) {
             href={`/sections/section-wise-students/${row.id}`}
             className="cursor-pointer px-3 py-2 bg-yellow-500 text-white rounded-md"
           >
-            View Students
+            View Section
           </Link>
         </div>
       ),

@@ -2,61 +2,104 @@ import React, { useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import AppLayout from '@/layouts/app-layout';
 import { Link } from '@inertiajs/react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
-export default function Students({students,section}) {
-    console.log(students,section);
-    const baseURL= import.meta.env.VITE_APP_URL;
-    // const updateStatus = (id, status) => {
-    //     router.put(`/students/${id}/status`, { status }, {
-    //         onSuccess: () => toast.success("Status updated"),
-    //         onError: () => toast.error("Update failed")
-    //     });
-    // };
+interface Subject {
+    id: number;
+    name: string;
+    status: number;
+    pivot: {
+        section_id: number;
+        subject_id: number;
+        created_at: string;
+        updated_at: string | null;
+    };
+}
+
+interface Student {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    guardian_phone: string;
+    student_class?: {
+        name: string;
+    };
+    section?: {
+        name: string;
+    };
+    status: 'pending' | 'approved' | 'rejected';
+    photo?: string;
+}
+
+interface Section {
+    id: number;
+    name: string;
+    subjects?: Subject[];
+}
+
+interface StudentsProps {
+    students: Student[];
+    section: Section;
+}
+
+export default function Students({ students, section,subjects }: StudentsProps) {
+    const baseURL = import.meta.env.VITE_APP_URL as string;
     const [filterText, setFilterText] = useState('');
+    console.log('subjects', subjects);
 
-    const filteredUsers = students.filter(
-        student =>
-            student.id.toString().includes(filterText) ||
-            (student.name && student.name.toLowerCase().includes(filterText.toLowerCase())) ||
-            (student.email && student.email.toLowerCase().includes(filterText.toLowerCase()))
-    );
 
-    const columns: TableColumn<[]>[] = [
-        // { name: 'ID', selector: row => row.id, sortable: true },
+    const filteredUsers = students.filter((student) => {
+        const fullName = `${student.first_name} ${student.last_name}`.toLowerCase();
+        const search = filterText.toLowerCase();
+
+        return (
+            student.id.toString().includes(search) ||
+            fullName.includes(search) ||
+            student.email.toLowerCase().includes(search)
+        );
+    });
+
+
+    const columns: TableColumn<Student>[] = [
         {
             name: 'Name',
-            cell: row => `${row.first_name} ${row.last_name}`,
-            sortable: true },
+            cell: (row) => `${row.first_name} ${row.last_name}`,
+            sortable: true,
+        },
         {
             name: 'Guardian Contact',
-            cell: row => row.guardian_phone,
-            sortable: false,
+            cell: (row) => row.guardian_phone,
         },
-
         {
             name: 'Class Level',
-            center:true,
-            cell: row => (
-                <span className={'p-2 bg-blue-500 text-white text-xs rounded-md'}>CLASS {row.student_class?.name}</span>
+            center: true,
+            cell: (row) => (
+                <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded-md">
+                    CLASS {row.student_class?.name ?? 'N/A'}
+                </span>
             ),
-            sortable: true },
+        },
         {
             name: 'Section',
-            // center:true,
-            cell: row => (
-                <span className={'p-2 bg-pink-500 text-white text-xs rounded-md'}>{row.section?.name}</span>
+            cell: (row) => (
+                <span className="px-2 py-1 bg-pink-500 text-white text-xs rounded-md">
+                    {row.section?.name ?? 'N/A'}
+                </span>
             ),
-            sortable: true },
+        },
         {
-            name : 'Admission Status',
-            cell: row => (
-                <Select
-                    value={row.status}
-                    // onValueChange={(value) => updateStatus(row.id, value)}
-                >
+            name: 'Admission Status',
+            cell: (row) => (
+                <Select value={row.status}>
                     <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="pending">Pending</SelectItem>
@@ -67,30 +110,78 @@ export default function Students({students,section}) {
             ),
         },
         {
-            name: 'Student Image',
-            cell: row => (
-                <div className="w-20 h-20 overflow-hidden rounded-md">
+            name: 'Photo',
+            cell: (row) => (
+                <div className="w-16 h-16 overflow-hidden rounded-md">
                     <img
-                        src={`${baseURL}/storage/${row.photo ?? ''}`}
+                        src={
+                            row.photo
+                                ? `${baseURL}/storage/${row.photo}`
+                                : '/images/avatar.png'
+                        }
                         className="w-full h-full object-cover"
-                        alt="Student"
                     />
                 </div>
-            )
+            ),
         },
-
     ];
 
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Students', href: '/students' }]}>
-            <div className="p-8">
-                <h1 className="text-2xl font-bold mb-4">Section <span className={`bg-green-500 rounded-md px-3 py-1`}>{section?.name}</span> students</h1>
 
-                <div className="flex items-center gap-4 mb-4 justify-between">
+            <div className="p-8">
+            <h1 className="text-2xl font-bold mb-4">
+                    Assigned Subjects for Section{' '}
+                    <span className="bg-green-500 text-white rounded-md px-3 py-1">
+                        {section.name}
+                    </span>
+                </h1>
+
+                {subjects?.subjects?.length === 0 ? (
+                    <p className="text-gray-500">
+                        No subjects assigned to this section.
+                    </p>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {subjects?.subjects?.map((subject) => (
+                            <div
+                                key={subject.id}
+                                className="rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition"
+                            >
+                                <h3 className="text-lg font-bold text-gray-800">
+                                    {subject.name}
+                                </h3>
+
+                                <span className="inline-block mt-2 text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                    Active
+                                </span>
+
+                                <p className="mt-3 text-xs text-gray-500">
+                                    Assigned on{' '}
+                                    {new Date(
+                                        subject.pivot.created_at
+                                    ).toLocaleDateString()}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div className="p-8">
+                <h1 className="text-2xl font-bold mb-4">
+                    Section{' '}
+                    <span className="bg-green-500 text-white rounded-md px-3 py-1">
+                        {section.name}
+                    </span>{' '}
+                    Students
+                </h1>
+
+                <div className="flex items-center justify-between gap-4 mb-4">
                     <Link
-                        href={`/sections`}
-                        className="cursor-pointer px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                        href="/sections"
+                        className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                         View Sections
                     </Link>
@@ -99,18 +190,17 @@ export default function Students({students,section}) {
                         type="text"
                         placeholder="Search by ID, name, or email"
                         value={filterText}
-                        onChange={e => setFilterText(e.target.value)}
-                        className="p-2 border border-gray-300 rounded"
+                        onChange={(e) => setFilterText(e.target.value)}
+                        className="p-2 border rounded"
                     />
                 </div>
+
                 <DataTable
                     title="Student List"
                     columns={columns}
                     data={filteredUsers}
                     pagination
-                    // selectableRows
                     highlightOnHover
-                    pointerOnHover
                     customStyles={{
                         rows: {
                             style:{
@@ -133,6 +223,7 @@ export default function Students({students,section}) {
                     }}
                 />
             </div>
+
         </AppLayout>
     );
 }
