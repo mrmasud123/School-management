@@ -15,6 +15,8 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Admin\SubjectsController;
+use App\Http\Controllers\Admin\StudentDetailsController;
+use App\Http\Controllers\Admin\TeachersController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -28,15 +30,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    Route::get('/students/idcard/{id}', [\App\Http\Controllers\Admin\IDCardPrintingController::class, 'generateIdCard'])
+    Route::get('/students/idcard/{id}', [\App\Http\Controllers\Admin\StudentDetailsController::class, 'generateIdCard'])
         ->name('students.idcard');
 
     Route::get('/products', [ProductController::class, 'index'])->name('products');
     Route::resource('/sales-billing', SalesBillingController::class)->names('sales.billing');
     Route::resource('/inventory-management', InventoryManagementController::class)->names('inventory.management');
+    Route::put('/students/{student}/status', [StudentController::class, 'updateStatus'])->name('students.update.status');
     Route::resource('/students', StudentController::class)->names('admin.students');
+    
     Route::get('/trashed-students', [StudentController::class, 'trashed'])->name('trashed.students');
-    Route::patch('/{id}/restore', [StudentController::class, 'restore'])
+    Route::patch('/students/{id}/restore', [StudentController::class, 'restore'])
         ->name('students.restore');
 
     Route::delete('/{id}/force', [StudentController::class, 'forceDelete'])
@@ -60,7 +64,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/student-management', StudentManagementController::class)->names('admin.student');
     Route::resource('/parent-accounts', ParentAccountsController::class)->names('admin.parent.accounts');
     Route::get('/staff-management', [\App\Http\Controllers\Admin\StaffManagementController::class, 'index'])->name('admin.staff');
-    Route::get('/id-card-printing', [\App\Http\Controllers\Admin\IDCardPrintingController::class, 'index'])->name('admin.idcard');
+
+    Route::get('/student-details', [StudentDetailsController::class, 'index'])->name('admin.idcard');
+    Route::get('/fetch-students/{sectionId}', [StudentDetailsController::class, 'fetchStudents'])->name('fetch.students');
+    Route::get('/student-all-details/{studentId}', [StudentDetailsController::class, 'studentAllDetails'])->name('student.all.details');
+    
     Route::get('/accountants', [\App\Http\Controllers\Admin\AccountantsController::class, 'index'])->name('admin.accountants');
     Route::get('/parent-complaints', [\App\Http\Controllers\Admin\ParentComplaintsController::class, 'index'])->name('admin.parent.complaints');
     Route::get('/classes-sections', [\App\Http\Controllers\Admin\ClassesSectionsController::class, 'index'])->name('admin.classes.sections');
@@ -74,6 +82,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('/users', UserController::class)->names('admin.users');
 
+    
+    //Teachers
+    Route::post('/teachers/{teacher}', [TeachersController::class, 'update']);
+
+    Route::get('/teachers/trashed-teachers', [TeachersController::class, 'trashed'])->name('trashed.teachers');
+    Route::resource('/teachers', TeachersController::class)->names('admin.teachers');
+    Route::patch('/{id}/restore', [TeachersController::class, 'restore'])
+    ->name('teachers.restore');
     // Route::post();
 
     Route::middleware(['role:teacher'])->group(function() {

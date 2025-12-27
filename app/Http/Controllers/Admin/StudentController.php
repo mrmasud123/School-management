@@ -216,7 +216,10 @@ class StudentController extends Controller
     {
         $student->delete();
 
-        return redirect()->back()->with('success', 'User deleted.');
+        // return redirect()->route('admin.students.index')->with('success', 'User deleted.');
+        return redirect()
+        ->route('admin.students.index')
+        ->setStatusCode(303);
     }
 
     public function migrate(){
@@ -309,6 +312,19 @@ class StudentController extends Controller
         Student::onlyTrashed()->findOrFail($id)->forceDelete();
 
         return redirect()->back()->with('success', 'Student permanently deleted.');
+    }
+    
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:approved,pending,rejected'
+        ]);
+
+        $student = Student::findOrFail($id);
+        $student->status = $request->input('status');
+        $student->save();
+
+        return redirect()->back()->with('success', 'Student status updated.');
     }
 
 

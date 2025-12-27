@@ -33,8 +33,8 @@ export default function Trashed({students}) {
         });
     }
 
-    const handleRestore =(studentId)=>{
-        router.patch(`/${studentId}/restore`,{
+    const handleRestore =(studentId:number)=>{
+        router.patch(`/students/${studentId}/restore`,{
             onSuccess:(data)=>{
                 console.log(data);
             },

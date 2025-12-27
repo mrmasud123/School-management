@@ -2,18 +2,41 @@ import React, { useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import AppLayout from '@/layouts/app-layout';
 import { Link } from '@inertiajs/react';
-
+import { Button } from '@/components/ui/button';
+import { Edit, NotebookTabs, Trash } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuPortal,
+    DropdownMenuSeparator,
+    DropdownMenuShortcut,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 interface Sections{
-    all_class : [];
     capacity:number;
     class_id:number;
     id:number;
-    name:string;
+  name: string;
+  students_count: number;
+  all_class: { id: number; name: string; } | null;
 }
-export default function Sections({sections}) {
+
+interface SectionsProps {
+  sections: {
+    [key: string]: Sections[];
+  };
+}
+
+export default function Sections({sections}: SectionsProps) {
     const sec= Object.values(sections).flat();
   const [filterText, setFilterText] = useState('');
-  console.log(sec);
+  console.log(sections);
   const filteredUsers = sec.filter(
     cls =>
       cls.id.toString().includes(filterText) ||
@@ -22,8 +45,8 @@ export default function Sections({sections}) {
   );
 
 
-    const columns: TableColumn<[]>[] = [
-        { name: 'ID', selector: row => row.id ?? 'N/A', sortable: true },
+    const columns: TableColumn<Sections>[] = [
+        // { name: 'ID', selector: row => row.id ?? 'N/A', sortable: true },
         { name: 'Name', selector: row => row.name ?? 'N/A', sortable: true },
         {
             name: 'Total Student',
@@ -44,24 +67,37 @@ export default function Sections({sections}) {
     {
       name: 'Action',
       cell: row => (
-        <div className="flex gap-2">
-          <Link
-              href={`/sections/${row.id}/edit`}
-            className="cursor-pointer px-3 py-2 bg-blue-500 text-white transition-all rounded-md hover:text-black"
-          >
-            Edit
-          </Link>
-            <Link
+        <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className='cursor-pointer'>Action</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="" align="start">
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem className='cursor-pointer'>
+                                <Link
+                                    href={`/sections/${row.id}/edit`}
+                                    className="px-3 flex items-center w-full py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200"
+                                >
+                                    Edit
+                                    <DropdownMenuShortcut><Edit className='text-white' /></DropdownMenuShortcut>
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className='cursor-pointer'>
+                                <Link
+                                    href={`/sections/section-wise-students/${row.id}`}
+                                    className="px-3 flex items-center w-full py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors duration-200"
+                                >
+                                    View Section
+                                    <DropdownMenuShortcut><NotebookTabs className='text-white' /></DropdownMenuShortcut>
+                                </Link>
+                            </DropdownMenuItem>
+                            
 
-            href={`/sections/section-wise-students/${row.id}`}
-            className="cursor-pointer px-3 py-2 bg-yellow-500 text-white rounded-md"
-          >
-            View Section
-          </Link>
-        </div>
+                        </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
       ),
-      sortable: false,
-      width: '300px',
+      sortable: false, 
     },
   ];
 
@@ -90,7 +126,7 @@ export default function Sections({sections}) {
 
          <DataTable
 
-          title="User List"
+          title="Section List"
           columns={columns}
           data={filteredUsers}
           pagination

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import AppLayout from '@/layouts/app-layout';
-import { Link } from '@inertiajs/react';
+import { Link,router } from '@inertiajs/react';
+import {route} from 'ziggy-js';
+
 import {
     Select,
     SelectContent,
@@ -9,6 +11,18 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+
+import { Edit, NotebookTabs, Trash } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuShortcut,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import toast from 'react-hot-toast';
+import { Button } from "@/components/ui/button"
 
 interface Subject {
     id: number;
@@ -26,6 +40,7 @@ interface Student {
     id: number;
     first_name: string;
     last_name: string;
+    admission_no: string;
     email: string;
     guardian_phone: string;
     student_class?: {
@@ -43,17 +58,29 @@ interface Section {
     name: string;
     subjects?: Subject[];
 }
+interface Subject {
+    id: number;
+    name: string;
+    status: number;
 
+}
 interface StudentsProps {
     students: Student[];
     section: Section;
+    subjects: Subject[]
 }
 
-export default function Students({ students, section,subjects }: StudentsProps) {
+export default function Students({ students, section, subjects }: StudentsProps) {
     const baseURL = import.meta.env.VITE_APP_URL as string;
     const [filterText, setFilterText] = useState('');
     console.log('subjects', subjects);
-
+    const updateStatus = (id: number, status: string) => {
+        router.put(`/students/${id}/status`, { status }, {
+            onSuccess: () => toast.success("Status updated"),
+            onError: () => toast.error("Update failed")
+        });
+        console.log(status)
+    };
 
     const filteredUsers = students.filter((student) => {
         const fullName = `${student.first_name} ${student.last_name}`.toLowerCase();
@@ -66,11 +93,31 @@ export default function Students({ students, section,subjects }: StudentsProps) 
         );
     });
 
+    const downloadIdCard = (id: number) => {
+        window.open(`/students/idcard/${id}`, "_blank");
+    };
+
+    
 
     const columns: TableColumn<Student>[] = [
         {
             name: 'Name',
             cell: (row) => `${row.first_name} ${row.last_name}`,
+            sortable: true,
+        },
+        {
+            name: 'Admission No',
+            cell: row => (
+                <span
+                    onClick={() => {
+                        navigator.clipboard.writeText(row.admission_no);
+                        toast.success('Admission Number Copied!');
+                    }}
+                    className="cursor-pointer text-blue-600 hover:underline"
+                >
+                    {row.admission_no}
+                </span>
+            ),
             sortable: true,
         },
         {
@@ -97,7 +144,7 @@ export default function Students({ students, section,subjects }: StudentsProps) 
         {
             name: 'Admission Status',
             cell: (row) => (
-                <Select value={row.status}>
+                <Select value={row.status} onValueChange={(value) => updateStatus(row.id, value)}>
                     <SelectTrigger>
                         <SelectValue />
                     </SelectTrigger>
@@ -124,6 +171,39 @@ export default function Students({ students, section,subjects }: StudentsProps) 
                 </div>
             ),
         },
+        {
+            name: 'Action',
+            cell: row => (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className='cursor-pointer'>Action</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="" align="start">
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem className='cursor-pointer'>
+                                <Link
+                                    href={`/students/${row.id}/edit`}
+                                    className="px-3 flex items-center w-full py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200"
+                                >
+                                    Edit
+                                    <DropdownMenuShortcut><Edit className='text-white' /></DropdownMenuShortcut>
+                                </Link>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem className='cursor-pointer'>
+                                <Button
+                                    className="px-3 cursor-pointer py-2 w-full bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+                                    onClick={() => downloadIdCard(row.id)}
+                                >
+                                    Download ID Card
+                                    <DropdownMenuShortcut><NotebookTabs className='text-white' /></DropdownMenuShortcut>
+                                </Button>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )
+        }
     ];
 
 
@@ -131,7 +211,7 @@ export default function Students({ students, section,subjects }: StudentsProps) 
         <AppLayout breadcrumbs={[{ title: 'Students', href: '/students' }]}>
 
             <div className="p-8">
-            <h1 className="text-2xl font-bold mb-4">
+                <h1 className="text-2xl font-bold mb-4">
                     Assigned Subjects for Section{' '}
                     <span className="bg-green-500 text-white rounded-md px-3 py-1">
                         {section.name}
@@ -203,13 +283,13 @@ export default function Students({ students, section,subjects }: StudentsProps) 
                     highlightOnHover
                     customStyles={{
                         rows: {
-                            style:{
-                                minHeight : "100px"
+                            style: {
+                                minHeight: "100px"
                             }
                         },
                         header: {
-                            style:{
-                                borderTopLeftRadius:"10px",
+                            style: {
+                                borderTopLeftRadius: "10px",
                                 borderTopRightRadius: "10px"
                             }
                         },

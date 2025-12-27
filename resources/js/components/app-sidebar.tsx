@@ -27,7 +27,8 @@ import {
     CreditCard,
     Store,
     Table2,
-    RollerCoaster
+    RollerCoaster,
+    ChevronsLeftRightEllipsis
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -59,9 +60,14 @@ const mainNavItems: NavItemWithSubMenu[] = [
             },{
                 title: 'Migrate Students',
                 href: '/migrate',
-                icon: Boxes,
+                icon: ChevronsLeftRightEllipsis,
             },
         ]
+    },
+    {
+        title: 'Teachers',
+        href: '/teachers',
+        icon: BookOpen,
     },
     {
         title: 'Subjects',
@@ -84,6 +90,11 @@ const mainNavItems: NavItemWithSubMenu[] = [
         icon: Users,
     },
     {
+        title: 'Student Details',
+        href: '/student-details',
+        icon: CreditCard,
+    },
+    {
         title: 'Student Management',
         href: '/student-management',
         icon: Users,
@@ -98,11 +109,7 @@ const mainNavItems: NavItemWithSubMenu[] = [
         href: '/staff-management',
         icon: BarChart2,
     },
-    {
-        title: 'ID Card Printing',
-        href: '/id-card-printing',
-        icon: CreditCard,
-    },
+    
     {
         title: 'Accountants',
         href: '/accountants',

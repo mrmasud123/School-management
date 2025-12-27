@@ -139,11 +139,7 @@ export default function AssignSubject({ subjects, classes }: Props) {
 
                 <form onSubmit={handleSubmit}>
                     <section className="border rounded-lg p-6 bg-card space-y-6">
-
-                        {/* SELECTS */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                            {/* CLASS */}
                             <div>
                                 <label className="text-sm font-medium">Select Class</label>
                                 <Select onValueChange={handleClassChange}>
@@ -159,8 +155,6 @@ export default function AssignSubject({ subjects, classes }: Props) {
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            {/* SECTION */}
                             <div>
                                 <label className="text-sm font-medium">Select Section</label>
                                 <Select
@@ -180,7 +174,6 @@ export default function AssignSubject({ subjects, classes }: Props) {
                                 </Select>
                             </div>
 
-                            {/* SUBJECT */}
                             <div>
                                 <label className="text-sm font-medium">Select Subject</label>
                                 <Select
@@ -201,8 +194,6 @@ export default function AssignSubject({ subjects, classes }: Props) {
                                 </Select>
                             </div>
                         </div>
-
-                        {/* ASSIGNED SUBJECTS */}
                         {sectionSubjects && (
                             <div className="pt-8">
                                 <h2 className="text-xl font-bold mb-4">
@@ -241,13 +232,12 @@ export default function AssignSubject({ subjects, classes }: Props) {
                             </div>
                         )}
 
-                        {/* SUBMIT */}
                         <Button
                             type="submit"
                             disabled={loading}
                             className="bg-blue-600 hover:bg-blue-700"
                         >
-                            {loading ? "Saving..." : "Create subject"}
+                            {loading ? "Saving..." : "Map subject"}
                         </Button>
                     </section>
                 </form>

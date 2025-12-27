@@ -7,7 +7,9 @@ use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Validator;
 
 class SectionController extends Controller
 {
@@ -16,8 +18,8 @@ class SectionController extends Controller
      */
     public function index()
     {
-        $sections= Section::withCount('students')->with('allClass:id,name')->orderByDesc('id')->get()->groupBy('class_id');
-        return Inertia::render('sections/Sections',['sections' => $sections]);
+        $sections = Section::withCount('students')->with('allClass:id,name')->orderByDesc('id')->get()->groupBy('class_id');
+        return Inertia::render('sections/Sections', ['sections' => $sections]);
     }
 
     /**
@@ -25,8 +27,8 @@ class SectionController extends Controller
      */
     public function create()
     {
-        $classes= SchoolClass::all();
-        return Inertia::render('sections/CreateSection',['classes' => $classes]);
+        $classes = SchoolClass::all();
+        return Inertia::render('sections/CreateSection', ['classes' => $classes]);
     }
     /**
      * Store a newly created resource in storage.
@@ -60,31 +62,95 @@ class SectionController extends Controller
      */
     public function edit(string $id)
     {
-        $classes= SchoolClass::all();
-        $section= Section::find($id);
-        return Inertia::render('sections/Edit',['classes' =>$classes, 'section' =>$section]);
+        $classes = SchoolClass::all();
+        $section = Section::withCount('students')->find($id);
+        return Inertia::render('sections/Edit', ['classes' => $classes, 'section' => $section]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $section=Section::find($id);
-        $validated= $request->validate([
-            'section_name' => 'required|unique:sections,name,'. $section->id,
-            'class_id' => 'required|exists:classes,id',
-            'capacity' => 'required|min:0'
-        ]);
 
+    // public function update(Request $request, string $id)
+    // {
+    //     $section = Section::withCount('students')->findOrFail($id);
+
+    //     $validator = Validator::make($request->all(), [
+    //         'section_name' => 'required|unique:sections,name,' . $section->id,
+    //         'class_id' => 'required|exists:classes,id',
+    //         'capacity' => 'required|integer|min:0',
+    //     ]);
+    //     $validator->after(function ($validator) use ($section, $request) {
+    //         if ($section->students_count > $request->capacity) {
+    //             $validator->errors()->add(
+    //                 'capacity',
+    //                 'Capacity cannot be less than the current student count of ' . $section->students_count
+    //             );
+    //         }
+    //     });
+ 
+    //     $validated = $validator->validate();
+        
+    //     $section->update([
+    //         'name' => $validated['section_name'],
+    //         'class_id' => $validated['class_id'],
+    //         'capacity' => $validated['capacity'],
+    //     ]);
+
+    //     return redirect()->route('admin.sections.index')
+    //         ->with('success', 'Section updated successfully!');
+    // }
+    
+  
+
+public function update(Request $request, string $id)
+{
+    $section = Section::withCount('students')->findOrFail($id);
+
+    $validator = Validator::make($request->all(), [
+        'section_name' => 'required|unique:sections,name,' . $section->id,
+        'class_id'     => 'required|exists:classes,id',
+        'capacity'     => 'required|integer|min:0',
+    ]);
+
+    $validator->after(function ($validator) use ($section, $request) {
+        if ($section->students_count > $request->capacity) {
+            $validator->errors()->add(
+                'capacity',
+                'Capacity cannot be less than the current student count of ' . $section->students_count
+            );
+        }
+    });
+
+    $validated = $validator->validate();
+
+    DB::beginTransaction();
+
+    try { 
         $section->update([
-            'name' => $validated['section_name'],
+            'name'     => $validated['section_name'],
             'class_id' => $validated['class_id'],
             'capacity' => $validated['capacity'],
+        ]); 
+        $section->students()->update([
+            'class_id'   => $validated['class_id'],
+            'section_id' => $section->id,
         ]);
 
-        return back()->with('success', 'Section updated successfully!');
+        DB::commit();
+
+        return redirect()
+            ->route('admin.sections.index')
+            ->with('success', 'Section and students updated successfully!');
+    } catch (\Throwable $e) {
+        DB::rollBack();
+
+        report($e);  
+
+        return back()->withErrors([
+            'error' => 'Something went wrong while updating the section.',
+        ]);
     }
+}
+
+
 
     /**
      * Remove the specified resource from storage.
@@ -94,9 +160,10 @@ class SectionController extends Controller
         //
     }
 
-    public function fetchSections($classId){
+    public function fetchSections($classId)
+    {
         $sections = Section::withCount('students')->where('class_id', $classId)->get();
-        if(empty($sections)){
+        if (empty($sections)) {
             return "No Section Found " . $classId;
         }
 
@@ -105,10 +172,11 @@ class SectionController extends Controller
         ]);
     }
 
-    public function sectionWiseStudents($sectionId){
-        $subjects= Section::with('subjects')->find($sectionId);
-        $students= Student::with('studentClass','section')->orderByDesc('id')->where('section_id', $sectionId)->get();
-        $section= Section::findOrFail($sectionId);
-        return Inertia::render('sections/Students', ['students' => $students,'section' =>$section, 'subjects' => $subjects]);
+    public function sectionWiseStudents($sectionId)
+    {
+        $subjects = Section::with('subjects')->find($sectionId);
+        $students = Student::with('studentClass', 'section')->orderByDesc('id')->where('section_id', $sectionId)->get();
+        $section = Section::findOrFail($sectionId);
+        return Inertia::render('sections/Students', ['students' => $students, 'section' => $section, 'subjects' => $subjects]);
     }
 }

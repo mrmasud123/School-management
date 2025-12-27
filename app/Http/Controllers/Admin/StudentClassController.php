@@ -24,6 +24,7 @@ class StudentClassController extends Controller
      */
     public function create()
     {
+        $allClasses= SchoolClass::all();
         return Inertia::render('StudentClass/CreateClass');
     }
 

@@ -1,93 +1,132 @@
 import React, { useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import AppLayout from '@/layouts/app-layout';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import toast from 'react-hot-toast';
-export default function ClassWiseStudents({students,stdntClass}) {
-    console.log(students,stdntClass);
-    const baseURL= import.meta.env.VITE_APP_URL;
-    // const updateStatus = (id, status) => {
-    //     router.put(`/students/${id}/status`, { status }, {
-    //         onSuccess: () => toast.success("Status updated"),
-    //         onError: () => toast.error("Update failed")
-    //     });
-    // };
-    const [filterText, setFilterText] = useState('');
+import { Edit, NotebookTabs, Trash } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuPortal,
+    DropdownMenuSeparator,
+    DropdownMenuShortcut,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-    const filteredUsers = students.filter(
-        student =>
-            student.id.toString().includes(filterText) ||
-            (
-                student.first_name && student.first_name.toLowerCase().includes(filterText.toLowerCase())) ||(student.last_name && student.last_name.toLowerCase().includes(filterText.toLowerCase())
-                || (student?.sections?.name && student?.sections?.name.toLowerCase().includes(filterText.toLowerCase()))
-            )
+import { Button } from "@/components/ui/button"
+interface StudentDetails {
+    id: number;
+    first_name: string;
+    last_name: string;
+    admission_no: string;
+    guardian_phone: string;
+    status: string;
+    photo: string | null;
+    student_class: { name: string } | null;
+    sections: {
+        id: number;
+        name: string;
+        created_at: string;
+    };
+}
+
+interface StudentClass {
+    id: number;
+    name: string;
+    sections: {
+        id: number;
+        name: string;
+        created_at: string;
+    }[];
+}
+
+
+interface Props {
+    students: StudentDetails[];
+    stdntClass: StudentClass;
+}
+export default function ClassWiseStudents({ students, stdntClass }: Props) {
+    const baseURL = import.meta.env.VITE_APP_URL;
+    const [filterText, setFilterText] = useState('');
+    const updateStatus = (id: number, status: string) => {
+        router.put(`/students/${id}/status`, { status }, {
+            onSuccess: () => toast.success("Status updated"),
+            onError: () => toast.error("Update failed")
+        });
+        console.log(status)
+    };
+    const filteredUsers = students.filter(student =>
+        student.id.toString().includes(filterText) ||
+        student.first_name.toLowerCase().includes(filterText.toLowerCase()) ||
+        student.last_name.toLowerCase().includes(filterText.toLowerCase()) ||
+        student.sections?.name.toLowerCase().includes(filterText.toLowerCase())
     );
 
-    const columns: TableColumn<[]>[] = [
-        // { name: 'ID', selector: row => row.id, sortable: true },
+    const downloadIdCard = (id : number) => {
+        window.open(`/students/idcard/${id}`, "_blank");
+    };
+
+    const handleDelete = (studentId: number) => {
+
+        router.delete(`students/${studentId}`, {
+            onSuccess: (data) => {
+                console.log(data);
+            },
+            onFinish: () => {
+                console.log("Fininshed!");
+            },
+            onError: (errors) => {
+                console.log(errors);
+            },
+        });
+    }
+
+    const columns: TableColumn<StudentDetails>[] = [
         {
             name: 'Name',
             cell: row => `${row.first_name} ${row.last_name}`,
-            sortable: true
+            sortable: true,
         },
         {
             name: 'Admission No',
+            cell: row => (
+                <span
+                    onClick={() => {
+                        navigator.clipboard.writeText(row.admission_no);
+                        toast.success('Admission Number Copied!');
+                    }}
+                    className="cursor-pointer text-blue-600 hover:underline"
+                >
+                    {row.admission_no}
+                </span>
+            ),
             sortable: true,
-            cell: (row) => {
-                const value = row.admission_no;
-
-                const handleCopy = () => {
-                    // extract digits only
-                    const integerPart = value.replace(/\D/g, '');
-
-                    if (integerPart) {
-                        navigator.clipboard.writeText(integerPart);
-                        toast.success("Admission Number Copied!");
-                    }
-                };
-
-                return (
-                    <span
-                        onClick={handleCopy}
-                        className="cursor-pointer text-blue-600 hover:underline"
-                        title="Click to copy admission number"
-                    >
-                {value}
-            </span>
-                );
-            },
-        }
-        ,
-
-        {
-            name: 'Guardian Contact',
-            cell: row => row.guardian_phone,
-            sortable: false,
         },
         {
-            name: 'Class Level',
-            center:true,
-            cell: row => (
-                <span className={'p-2 bg-blue-500 text-white text-xs rounded-md'}>CLASS {row.student_class?.name}</span>
-            ),
-            sortable: true },
+            name: 'Guardian Contact',
+            selector: row => row.guardian_phone,
+        },
         {
             name: 'Section',
-            // center:true,
             cell: row => (
-                <span className={'p-2 bg-pink-500 text-white text-xs rounded-md'}>{row.sections?.name}</span>
+                <span className="p-2 bg-pink-500 text-white text-xs rounded-md">
+                    {row.sections?.name ?? 'N/A'}
+                </span>
             ),
-            sortable: true },
+        },
         {
-            name : 'Admission Status',
+            name: 'Admission Status',
             cell: row => (
-                <Select
-                    value={row.status}
-                    // onValueChange={(value) => updateStatus(row.id, value)}
-                >
+                <Select value={row.status} onValueChange={(value) => updateStatus(row.id, value)}>
                     <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="pending">Pending</SelectItem>
@@ -107,16 +146,60 @@ export default function ClassWiseStudents({students,stdntClass}) {
                         alt="Student"
                     />
                 </div>
-            )
+            ),
         },
+        {
+            name: 'Action',
+            cell: row => (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className='cursor-pointer'>Action</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="" align="start">
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem className='cursor-pointer'>
+                                <Link
+                                    href={`/students/${row.id}/edit`}
+                                    className="px-3 flex items-center w-full py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200"
+                                >
+                                    Edit
+                                <DropdownMenuShortcut><Edit className='text-white' /></DropdownMenuShortcut>
+                                </Link>
+                            </DropdownMenuItem>
 
+                            <DropdownMenuItem className='cursor-pointer'>
+                                <Button
+                                    className="px-3 cursor-pointer py-2 w-full bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+                                    onClick={() => downloadIdCard(row.id)}
+                                >
+                                    Download ID Card
+                                <DropdownMenuShortcut><NotebookTabs className='text-white' /></DropdownMenuShortcut>
+                                </Button>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem className='cursor-pointer' onClick={() => handleDelete(row.id)}>
+                                <Button
+                                    onClick={() => handleDelete(row.id)}
+                                    className="px-3 cursor-pointer w-full py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
+                                >
+                                    Delete
+                                <DropdownMenuShortcut><Trash className='text-white' /></DropdownMenuShortcut>
+                                </Button>
+                            </DropdownMenuItem>
+
+                        </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )
+        }
     ];
+
 
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Students', href: '/students' }]}>
-   
-            
+
+
             <div className="p-8">
                 <h1 className="text-2xl font-bold mb-4">Class <span className={`bg-green-500 text-white dark:text-white rounded-md px-3 py-1`}>{stdntClass?.name}</span> students</h1>
 
@@ -136,40 +219,40 @@ export default function ClassWiseStudents({students,stdntClass}) {
                         className="p-2 border border-gray-300 rounded"
                     />
                 </div>
-                
+
                 <div className="">
-            <h1 className="text-2xl font-bold mb-4">Assigned Sections</h1>
+                    <h1 className="text-2xl font-bold mb-4">Assigned Sections</h1>
 
-                {stdntClass.sections?.length === 0 ? (
-                    <p className="text-gray-500">
-                        No section assigned to this class.
-                    </p>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {stdntClass.sections?.map((section) => (
-                            <div
-                                key={section.id}
-                                className="rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition"
-                            >
-                                <h3 className="text-lg font-bold text-gray-800">
-                                    {section.name}
-                                </h3>
+                    {stdntClass.sections?.length === 0 ? (
+                        <p className="text-gray-500">
+                            No section assigned to this class.
+                        </p>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {stdntClass.sections?.map((section) => (
+                                <div
+                                    key={section.id}
+                                    className="rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition"
+                                >
+                                    <h3 className="text-lg font-bold text-gray-800">
+                                        {section.name}
+                                    </h3>
 
-                                <span className="inline-block mt-2 text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                                    Active
-                                </span>
+                                    <span className="inline-block mt-2 text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                        Active
+                                    </span>
 
-                                <p className="mt-3 text-xs text-gray-500">
-                                    Assigned on{' '}
-                                    {new Date(
-                                        section.created_at
-                                    ).toLocaleDateString()}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                                    <p className="mt-3 text-xs text-gray-500">
+                                        Assigned on{' '}
+                                        {new Date(
+                                            section.created_at
+                                        ).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
                 <DataTable
                     title="Student List"
                     columns={columns}
@@ -180,13 +263,13 @@ export default function ClassWiseStudents({students,stdntClass}) {
                     pointerOnHover
                     customStyles={{
                         rows: {
-                            style:{
-                                minHeight : "100px"
+                            style: {
+                                minHeight: "100px"
                             }
                         },
                         header: {
-                            style:{
-                                borderTopLeftRadius:"10px",
+                            style: {
+                                borderTopLeftRadius: "10px",
                                 borderTopRightRadius: "10px"
                             }
                         },
