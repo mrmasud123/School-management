@@ -28,7 +28,7 @@ export default function StudentDetails({student}: {student: any}) {
                                     </Button>
                  <Link
                                         className="px-3 ms-2 mt-4 cursor-pointer py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors duration-200"
-                                        href={'#'}
+                                        href={'/parent-accounts/create/'}
                                     >
                                         Create parent account?
                                     </Link>

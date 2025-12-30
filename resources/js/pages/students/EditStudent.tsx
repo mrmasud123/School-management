@@ -70,7 +70,7 @@ export default function EditStudent({ classes,all_section,student }) {
 
         } catch (err) {
             console.log(err);
-            toast.error(Object.values(err?.response?.data?.errors)[0]);
+            toast.error(Object.values(err?.response?.data?.errors)[0] as string);
         } finally {
             setLoading(false);
         }

@@ -37,6 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/sales-billing', SalesBillingController::class)->names('sales.billing');
     Route::resource('/inventory-management', InventoryManagementController::class)->names('inventory.management');
     Route::put('/students/{student}/status', [StudentController::class, 'updateStatus'])->name('students.update.status');
+    Route::get('/students/export/excel', [StudentController::class, 'export'])->name('students.export.excel');
     Route::resource('/students', StudentController::class)->names('admin.students');
     
     Route::get('/trashed-students', [StudentController::class, 'trashed'])->name('trashed.students');
@@ -62,7 +63,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/subjects', SubjectsController::class)->names('admin.subjects');
 
     Route::resource('/student-management', StudentManagementController::class)->names('admin.student');
+    
+    Route::get('/parent-accounts/student-parent-mapping/{parentId}', [ParentAccountsController::class, 'mapping'])->name('admin.parents.accounts.mapping');
+    Route::post('/parent-student-mapping', [ParentAccountsController::class, 'parentStudentMapping'])->name('admin.parents.student.mapping');
     Route::resource('/parent-accounts', ParentAccountsController::class)->names('admin.parent.accounts');
+    Route::get('/admin/remove-parent-student-mapping/{parentId}/{studentId}', [ParentAccountsController::class, 'removeMapping'])->name('admin.parents.accounts.remove');
     Route::get('/staff-management', [\App\Http\Controllers\Admin\StaffManagementController::class, 'index'])->name('admin.staff');
 
     Route::get('/student-details', [StudentDetailsController::class, 'index'])->name('admin.idcard');

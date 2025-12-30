@@ -5,7 +5,6 @@ import { Link, router } from '@inertiajs/react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
-import { route } from 'ziggy-js';
 
 import { Edit, NotebookTabs, Trash } from 'lucide-react';
 import {
@@ -22,135 +21,116 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { students } from '@/routes/section/wise';
 interface StudentsProps {
-    students: Student[];
+    parents: ParentAccount[];
 }
 
-interface Student {
+interface ParentAccount {
     id: number;
     first_name: string;
     last_name: string;
-    guardian_phone: string;
+    phone: string;
+    students: {
+        id: number,
+        first_name: string,
+        last_name: string,
+        student_class: {
+            id: number,
+            name:string
+        },
+        section:{
+            id: number,
+            name: string
+        }
+    }[],
     student_class: { id: number; name: string; } | null;
     section: { id: number; name: string; } | null;
-    status: string;
-    admission_no: string;
-    photo: string | null;
+    email: string;
+    address: string | null;
+    is_active: number;
 }
-export default function Students({ students }: StudentsProps) {
-    console.log(students);
+export default function Index({ parents }: StudentsProps) {
+    console.log(parents)
     const baseURL = import.meta.env.VITE_APP_URL;
-    const updateStatus = (id: number, status: string) => {
-        router.put(`/students/${id}/status`, { status }, {
-            onSuccess: () => toast.success("Status updated"),
-            onError: () => toast.error("Update failed")
-        });
-        console.log(status)
-    };
     const [filterText, setFilterText] = useState('');
 
-    const filteredUsers = students.filter(
-        student =>
-            student.id.toString().includes(filterText) ||
-            (student.first_name && student.first_name.toLowerCase().includes(filterText.toLowerCase())) ||
-            (student.last_name && student.last_name.toLowerCase().includes(filterText.toLowerCase()))
+    const filteredUsers = parents.filter(
+        parent =>
+            parent.id.toString().includes(filterText) ||
+            (parent.first_name && parent.first_name.toLowerCase().includes(filterText.toLowerCase())) ||
+            (parent.last_name && parent.last_name.toLowerCase().includes(filterText.toLowerCase()))
     );
-    const downloadIdCard = (id: number) => {
-        window.open(`/students/idcard/${id}`, "_blank");
-    };
-
-    const handleDelete = (studentId: number) => {
-
-        router.delete(`students/${studentId}`, {
-            onSuccess: (data) => {
-                console.log(data);
-            },
-            onFinish: () => {
-                console.log("Fininshed!");
-            },
-            onError: (errors) => {
-                console.log(errors);
-            },
-        });
-    }
-    const columns: TableColumn<Student>[] = [
+    
+    const columns: TableColumn<ParentAccount>[] = [
         // { name: 'ID', selector: row => row.id, sortable: true },
         {
-            name: 'Name',
+            name: 'Parent name',
             cell: row => `${row.first_name} ${row.last_name}`,
             sortable: true
         },
         {
-            name: 'Admission No',
-            cell: row => (
-                <span
-                    onClick={() => {
-                        navigator.clipboard.writeText(row.admission_no);
-                        toast.success('Admission Number Copied!');
-                    }}
-                    className="cursor-pointer text-blue-600 hover:underline"
-                >
-                    {row.admission_no}
-                </span>
-            ),
-            sortable: true,
-            width: "150px"
-        },
-        {
-            name: 'Guardian Contact',
-            cell: row => row.guardian_phone,
+            name: 'Contact',
+            cell: row => row.phone,
             sortable: false,
         },
-
         {
-            name: 'Class Level',
-            // center:true,
-            cell: row => (
-                <span className={'p-2 bg-blue-500 text-white text-xs rounded-md'}>CLASS {row.student_class?.name}</span>
-            ),
-            sortable: true
+            name: 'E-mail',
+            cell: row => row.email,
+            sortable: false,
         },
         {
-            name: 'Section',
-            // center:true,
+            name: 'Assigned Students',
             cell: row => (
-                <span className={'p-2 bg-pink-500 text-white text-xs rounded-md'}>{row.section?.name}</span>
-            ),
-            sortable: true
+                <div className="flex flex-wrap gap-2 max-w-xs">
+                    {row?.students?.length ? (
+                        row.students.map((student, index) => (
+                            <span
+                                key={index}
+                                className="
+                                    inline-flex items-center gap-2
+                                    px-3 py-1 rounded-full
+                                    bg-gradient-to-r from-blue-500 to-indigo-500
+                                    text-white text-xs font-medium
+                                    shadow-sm
+                                    hover:from-indigo-500 hover:to-blue-500
+                                    transition
+                                "
+                            >
+                                <span className="w-6 h-6 flex items-center justify-center rounded-full bg-white/20 text-[10px]">
+                                    {student.first_name.charAt(0)}
+                                    {student.last_name.charAt(0)}
+                                </span>
+                                {student.first_name} {student.last_name} <br /> Class: { student?.student_class?.name} <br /> Section: {student?.section?.name}
+                            </span>
+                        ))
+                    ) : (
+                        <span className="text-gray-400 italic text-sm">
+                            No students assigned
+                        </span>
+                    )}
+                </div>
+            )
         },
+        
         {
-            name: 'Admission Status',
+            name: 'Account Status',
             width: '150px',
             cell: row => (
                 <Select
-                    value={row.status}
-                    onValueChange={(value) => updateStatus(row.id, value)}
+                    value={String(row.is_active)}
+                    // onValueChange={(value) => updateStatus(row.id, value)}
                 >
                     <SelectTrigger>
                         <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
+                        <SelectItem value="1">Active</SelectItem>
+                        <SelectItem value="0">Deactive</SelectItem>
                     </SelectContent>
                 </Select>
             ),
         },
-        {
-            name: 'Student Image',
-            cell: row => (
-                <div className="w-20 h-20 overflow-hidden rounded-md">
-                    <img
-                        src={`${baseURL}/storage/${row.photo ?? ''}`}
-                        className="w-full h-full object-cover"
-                        alt="Student"
-                    />
-                </div>
-            )
-        },
-
-
         {
             name: 'Action',
 
@@ -163,7 +143,7 @@ export default function Students({ students }: StudentsProps) {
                         <DropdownMenuGroup>
                             <DropdownMenuItem className='cursor-pointer'>
                                 <Link
-                                    href={`/students/${row.id}/edit`}
+                                    href={`/parent-accounts/${row.id}/edit`}
                                     className="px-3 flex items-center w-full py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200"
                                 >
                                     Edit
@@ -171,19 +151,18 @@ export default function Students({ students }: StudentsProps) {
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem className='cursor-pointer'>
-                                <Button
-                                    onClick={() => downloadIdCard(row.id)}
+                                <Link
+                                    href={`/parent-accounts/student-parent-mapping/${row.id}`}
                                     className="px-3 flex items-center w-full py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors duration-200"
                                 >
-                                    Download ID Card
-                                    <DropdownMenuShortcut><NotebookTabs className='text-white' /></DropdownMenuShortcut>
-                                </Button>
-
+                                    Assign Student
+                                    <DropdownMenuShortcut><Edit className='text-white ms-1' /></DropdownMenuShortcut>
+                                </Link>
                             </DropdownMenuItem>
-
+                            
                             <DropdownMenuItem className='cursor-pointer'>
                                 <Button
-                                    onClick={() => handleDelete(row.id)}
+                                    // onClick={() => handleDelete(row.id)}
                                     className="px-3 flex items-center w-full py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
                                 >
                                     Delete
@@ -202,37 +181,19 @@ export default function Students({ students }: StudentsProps) {
     ];
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Students', href: '/students' }]}>
+        <AppLayout breadcrumbs={[{ title: 'Parents', href: '/parent-accounts' }]}>
             <div className="p-8">
-                <h1 className="text-2xl font-bold mb-4">Students</h1>
+                <h1 className="text-2xl font-bold mb-4">Parents</h1>
                 <div className="flex items-center gap-4 mb-4 justify-between">
                     <Link
-                        href={`/students/create/`}
+                        href={`/parent-accounts/create/`}
                         className="cursor-pointer px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                     >
-                        Admit Student
+                        Create New Parent Account
                     </Link>
 
                     <div className="flex items-center">
-                        <Button
-                            onClick={() => {
-                                const url = route('students.export.excel', {
-                                    search: filterText,
-                                });
-                                window.open(url, '_blank');
-                            }}
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                            Export Excel
-                        </Button>
-
-                        <Link
-                            href={`/trashed-students`}
-                            className="cursor-pointer px-3 py-1 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50 me-2"
-                        >
-                            View trashed students
-                        </Link>
-
+                        
                         <input
                             type="text"
                             placeholder="Search by ID, name, or email"
@@ -245,7 +206,7 @@ export default function Students({ students }: StudentsProps) {
 
 
                 <DataTable
-                    title="Student List"
+                    
                     columns={columns}
                     data={filteredUsers}
                     pagination
@@ -255,7 +216,7 @@ export default function Students({ students }: StudentsProps) {
                     customStyles={{
                         rows: {
                             style: {
-                                minHeight: "100px"
+                                minHeight: "130px"
                             }
                         },
                         header: {

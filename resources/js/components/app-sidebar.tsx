@@ -95,14 +95,14 @@ const mainNavItems: NavItemWithSubMenu[] = [
         icon: CreditCard,
     },
     {
-        title: 'Student Management',
-        href: '/student-management',
-        icon: Users,
-    },
-    {
         title: 'Parent Accounts',
         href: '/parent-accounts',
         icon: UserCog,
+    },
+    {
+        title: 'Student Management',
+        href: '/student-management',
+        icon: Users,
     },
     {
         title: 'Staff Management',

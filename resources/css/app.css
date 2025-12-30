@@ -169,3 +169,11 @@
     @apply bg-background text-foreground;
     }
 }
+
+/* Chrome, Safari, Edge */
+.no-spinner::-webkit-inner-spin-button,
+.no-spinner::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
