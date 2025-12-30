@@ -39,6 +39,9 @@ interface Student {
 }
 export default function Students({ students }: StudentsProps) {
     console.log(students);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+
     const baseURL = import.meta.env.VITE_APP_URL;
     const updateStatus = (id: number, status: string) => {
         router.put(`/students/${id}/status`, { status }, {
@@ -218,13 +221,29 @@ export default function Students({ students }: StudentsProps) {
                             onClick={() => {
                                 const url = route('students.export.excel', {
                                     search: filterText,
+                                    page: currentPage,
+                                    per_page: perPage,
                                 });
                                 window.open(url, '_blank');
                             }}
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            className="bg-green-600 hover:bg-green-700 text-white me-2"
                         >
                             Export Excel
                         </Button>
+                        <Button
+                            onClick={() => {
+                                const url = route('students.export.pdf', {
+                                    search: filterText,
+                                    page: currentPage,
+                                    per_page: perPage,
+                                });
+                                window.open(url, '_blank');
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white me-2"
+                        >
+                            Export PDF
+                        </Button>
+
 
                         <Link
                             href={`/trashed-students`}
@@ -252,6 +271,13 @@ export default function Students({ students }: StudentsProps) {
                     // selectableRows
                     highlightOnHover
                     pointerOnHover
+                    paginationServer={false}
+                    paginationPerPage={perPage}
+                    onChangePage={(page) => setCurrentPage(page)}
+                    onChangeRowsPerPage={(newPerPage, page) => {
+                        setPerPage(newPerPage);
+                        setCurrentPage(page);
+                    }}
                     customStyles={{
                         rows: {
                             style: {

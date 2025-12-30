@@ -38,6 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/inventory-management', InventoryManagementController::class)->names('inventory.management');
     Route::put('/students/{student}/status', [StudentController::class, 'updateStatus'])->name('students.update.status');
     Route::get('/students/export/excel', [StudentController::class, 'export'])->name('students.export.excel');
+    Route::get('/students/export/pdf', [StudentController::class, 'exportPdf'])->name('students.export.pdf');
     Route::resource('/students', StudentController::class)->names('admin.students');
     
     Route::get('/trashed-students', [StudentController::class, 'trashed'])->name('trashed.students');

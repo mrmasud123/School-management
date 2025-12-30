@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Validation\ValidationException;
-
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\StudentsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StudentController extends Controller
 {
@@ -23,8 +25,8 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $students= Student::with('studentClass','section')->orderByDesc('id')->get();
-        return Inertia::render('students/Students',['students' =>$students]);
+        $students = Student::with('studentClass', 'section')->orderByDesc('id')->get();
+        return Inertia::render('students/Students', ['students' => $students]);
     }
 
     /**
@@ -32,8 +34,8 @@ class StudentController extends Controller
      */
     public function create()
     {
-        $classes= SchoolClass::all();
-        $sections= Section::all();
+        $classes = SchoolClass::all();
+        $sections = Section::all();
         return Inertia::render('students/AdmitStudent', ['classes' => $classes, 'sections' => $sections]);
     }
 
@@ -43,68 +45,114 @@ class StudentController extends Controller
     public function store(StudentAdmissionRequest $request)
     {
         $data = $request->validated();
-        $uploadedImagePath = null;
+        // $uploadedImagePath = null;
 
-        try {
-            DB::beginTransaction();
-            if ($request->hasFile('photo')) {
-                $uploadedImagePath = $request->file('photo')->store('uploads/students', 'public');
-                $data['photo'] = $uploadedImagePath;
-            }
+        // try {
+        //     DB::beginTransaction();
+        //     if ($request->hasFile('photo')) {
+        //         $uploadedImagePath = $request->file('photo')->store('uploads/students', 'public');
+        //         $data['photo'] = $uploadedImagePath;
+        //     }
 
-            if (empty($data['admission_no'])) {
-                $data['admission_no'] = 'ADM' . time();
-            }
+        //     if (empty($data['admission_no'])) {
+        //         $data['admission_no'] = 'ADM' . time();
+        //     }
 
-            $studentData = [
-                'admission_no'       => $data['admission_no'],
-                'first_name'         => $data['first_name'],
-                'last_name'          => $data['last_name'],
-                'dob'                => $data['dob'],
-                'blood_group'        => $data['blood_group'] ?? null,
-                'gender'             => $data['gender'],
-                'email'              => $data['email'] ?? null,
-                'father_name'        => $data['father_name'],
-                'mother_name'        => $data['mother_name'],
-                'father_occupation'  => $data['father_occupation'],
-                'mother_occupation'  => $data['mother_occupation'],
-                'nationality'        => $data['nationality'],
-                'guardian_phone'     => $data['guardian_phone'],
-                'class_id'           => $data['class_id'],
-                'section_id'         => $data['section_id'],
-                'admission_date'     => $data['admission_date'],
-                'academic_year'      => $data['academic_year'],
-                'previous_school'    => $data['previous_school'] ?? null,
-                'address' => $data['current_address'] ?? null,
-                'photo'              => $data['photo'] ?? null,
-                'status'             => $data['status'],
-            ];
+        //     $studentData = [
+        //         'admission_no'       => $data['admission_no'],
+        //         'first_name'         => $data['first_name'],
+        //         'last_name'          => $data['last_name'],
+        //         'dob'                => $data['dob'],
+        //         'blood_group'        => $data['blood_group'] ?? null,
+        //         'gender'             => $data['gender'],
+        //         'email'              => $data['email'] ?? null,
+        //         'father_name'        => $data['father_name'],
+        //         'mother_name'        => $data['mother_name'],
+        //         'father_occupation'  => $data['father_occupation'],
+        //         'mother_occupation'  => $data['mother_occupation'],
+        //         'nationality'        => $data['nationality'],
+        //         'guardian_phone'     => $data['guardian_phone'],
+        //         'class_id'           => $data['class_id'],
+        //         'section_id'         => $data['section_id'],
+        //         'admission_date'     => $data['admission_date'],
+        //         'academic_year'      => $data['academic_year'],
+        //         'previous_school'    => $data['previous_school'] ?? null,
+        //         'address' => $data['current_address'] ?? null,
+        //         'photo'              => $data['photo'] ?? null,
+        //         'status'             => $data['status'],
+        //     ];
 
-            Student::create($studentData);
+        //     Student::create($studentData);
 
-            DB::commit();
+        //     DB::commit();
 
-            return redirect()
-                ->back()
-                ->with('success', 'Student admitted successfully!');
+        //     return redirect()
+        //         ->back()
+        //         ->with('success', 'Student admitted successfully!');
 
-        }  catch (\Exception $e) {
-            DB::rollBack();
+        // }  catch (\Exception $e) {
+        //     DB::rollBack();
 
-            if ($uploadedImagePath && Storage::disk('public')->exists($uploadedImagePath)) {
-            Storage::disk('public')->delete($uploadedImagePath);
-            }
+        //     if ($uploadedImagePath && Storage::disk('public')->exists($uploadedImagePath)) {
+        //     Storage::disk('public')->delete($uploadedImagePath);
+        //     }
 
-            Log::error('Student Admission Error', [
-                'message' => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine(),
-                'trace'   => $e->getTraceAsString(),
-            ]);
+        //     Log::error('Student Admission Error', [
+        //         'message' => $e->getMessage(),
+        //         'file'    => $e->getFile(),
+        //         'line'    => $e->getLine(),
+        //         'trace'   => $e->getTraceAsString(),
+        //     ]);
 
-            return back()->with('error', 'Failed to admit student');
-        }
+        //     return back()->with('error', 'Failed to admit student');
+        // }
 
+        $studentData = Student::create([
+            // required & unique
+            'admission_no'      => $data['admission_no'] ?? 'ADM' . time(),
+
+            // basic info
+            'first_name'        => $data['first_name'],
+            'last_name'         => $data['last_name'],
+            'dob'               => $data['dob'],
+            'blood_group'       => $data['blood_group'] ?? null,
+            'gender'            => $data['gender'],
+
+            // contact
+            'email'             => $data['email'] ?? null,
+
+            // parents
+            'father_name'       => $data['father_name'],
+            'mother_name'       => $data['mother_name'],
+            'father_occupation' => $data['father_occupation'] ?? null,
+            'mother_occupation' => $data['mother_occupation'] ?? null,
+
+            // personal
+            'nationality'       => $data['nationality'],
+            'religion'          => $data['religion'] ?? null,
+
+            // guardian
+            'guardian_relation' => $data['guardian_relation'],
+            'guardian_phone'    => $data['guardian_phone'],
+
+            // academics
+            'roll_no'           => $data['roll_no'] ?? null,
+            'class_id'          => $data['class_id'],
+            'section_id'        => $data['section_id'],
+            'admission_date'    => $data['admission_date'],
+            'academic_year'     => $data['academic_year'],
+
+            // status fields
+            'student_status'    => $data['student_status'] ?? 0, // tinyint(1)
+            'status'            => $data['status'] ?? 'pending', // enum
+
+            // optional
+            'previous_school'   => $data['previous_school'] ?? null,
+            'address'           => $data['address'] ?? null,
+            'photo'             => $data['photo'] ?? null,
+        ]);
+
+        dd($studentData);
     }
 
 
@@ -117,7 +165,7 @@ class StudentController extends Controller
         $code = "ADM" . $id;
 
         // Find the student by admission number
-        $student = Student::with('studentClass','section')->where('admission_no', $code)->first();
+        $student = Student::with('studentClass', 'section')->where('admission_no', $code)->first();
 
         if (!$student) {
             return response()->json([
@@ -133,13 +181,15 @@ class StudentController extends Controller
      */
     public function edit(string $id)
     {
-        $classes= SchoolClass::all();
-        $sections= Section::withCount('students')->get();
-        $student= Student::with('studentClass','section')->find($id);
-        return Inertia::render('students/EditStudent', [
-            'student' => $student,
-            'classes' =>$classes,
-            'all_section'=>$sections
+        $classes = SchoolClass::all();
+        $sections = Section::withCount('students')->get();
+        $student = Student::with('studentClass', 'section')->find($id);
+        return Inertia::render(
+            'students/EditStudent',
+            [
+                'student' => $student,
+                'classes' => $classes,
+                'all_section' => $sections
             ]
         );
     }
@@ -199,7 +249,6 @@ class StudentController extends Controller
             return redirect()
                 ->back()
                 ->with('success', 'Student updated successfully!');
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -209,7 +258,7 @@ class StudentController extends Controller
         }
     }
 
-                /**
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Student $student)
@@ -218,16 +267,17 @@ class StudentController extends Controller
 
         // return redirect()->route('admin.students.index')->with('success', 'User deleted.');
         return redirect()
-        ->route('admin.students.index')
-        ->setStatusCode(303);
+            ->route('admin.students.index')
+            ->setStatusCode(303);
     }
 
-    public function migrate(){
-        $classes= SchoolClass::all();
-        $sections= Section::all();
+    public function migrate()
+    {
+        $classes = SchoolClass::all();
+        $sections = Section::all();
         return Inertia::render('students/MigrateStudent', [
-            'classes' =>$classes,
-            'sections' =>$sections
+            'classes' => $classes,
+            'sections' => $sections
         ]);
     }
 
@@ -283,7 +333,6 @@ class StudentController extends Controller
                 'message' => 'Student migrated successfully',
                 'student' => $student
             ], 200);
-
         } catch (\Exception $e) {
 
             DB::rollBack();
@@ -295,9 +344,10 @@ class StudentController extends Controller
         }
     }
 
-    public function trashed(){
-        $students= Student::with('studentClass','section')->orderByDesc('deleted_at')->onlyTrashed()->get();
-        return Inertia::render('students/Trashed', ['students'=>$students]);
+    public function trashed()
+    {
+        $students = Student::with('studentClass', 'section')->orderByDesc('deleted_at')->onlyTrashed()->get();
+        return Inertia::render('students/Trashed', ['students' => $students]);
     }
 
     public function restore($id)
@@ -313,7 +363,7 @@ class StudentController extends Controller
 
         return redirect()->back()->with('success', 'Student permanently deleted.');
     }
-    
+
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
@@ -329,4 +379,39 @@ class StudentController extends Controller
 
 
 
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new StudentsExport(
+                $request->query('search'),
+                $request->query('page', 1),
+                $request->query('per_page', 10)
+            ),
+            'students_page_' . $request->page . '.xlsx'
+        );
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $search   = $request->query('search');
+        $page     = (int) $request->query('page', 1);
+        $perPage  = (int) $request->query('per_page', 10);
+
+        $students = Student::query()
+            ->with(['studentClass', 'section'])
+            ->when($search, function ($q) use($search) {
+                $q->where('id', 'like', "%{$search}%")
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%");
+            })
+            ->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get();
+
+        $pdf = Pdf::loadView('pdf.students', [
+            'students' => $students,
+            'page'     => $page,
+        ])->setPaper('a4', 'landscape');
+        return $pdf->download("students_page_{$page}.pdf");
+    }
 }
