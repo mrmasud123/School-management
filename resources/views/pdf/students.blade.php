@@ -53,7 +53,7 @@
                 <td>{{ ucfirst($student->status) }}</td>
             </tr>
         @endforeach
-    </tbody>
+</tbody>
 </table>
 
 </body>

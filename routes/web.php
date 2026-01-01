@@ -17,6 +17,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\Admin\SubjectsController;
 use App\Http\Controllers\Admin\StudentDetailsController;
 use App\Http\Controllers\Admin\TeachersController;
+use App\Http\Controllers\Admin\StaffManagementController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -69,7 +70,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/parent-student-mapping', [ParentAccountsController::class, 'parentStudentMapping'])->name('admin.parents.student.mapping');
     Route::resource('/parent-accounts', ParentAccountsController::class)->names('admin.parent.accounts');
     Route::get('/admin/remove-parent-student-mapping/{parentId}/{studentId}', [ParentAccountsController::class, 'removeMapping'])->name('admin.parents.accounts.remove');
-    Route::get('/staff-management', [\App\Http\Controllers\Admin\StaffManagementController::class, 'index'])->name('admin.staff');
+    
+    //Staff Management
+    Route::get('/staff-management/trashed-staffs', [StaffManagementController::class, 'trashed'])->name('admin.staff.trashed');
+    Route::patch('/staff-management/restore/{staff}', [StaffManagementController::class, 'restore'])->name('admin.staff.restore');
+    Route::delete('/staff-management/{staff}/staff-force', [StaffManagementController::class, 'forceDelete'])->name('staff.forceDelete');
+    Route::post('/staff-management/{staff_management}', [StaffManagementController::class, 'update']);
+    Route::resource('/staff-management', StaffManagementController::class)->names('admin.staff')->parameters([
+        'staff-management' => 'staff',
+    ]);
 
     Route::get('/student-details', [StudentDetailsController::class, 'index'])->name('admin.idcard');
     Route::get('/fetch-students/{sectionId}', [StudentDetailsController::class, 'fetchStudents'])->name('fetch.students');

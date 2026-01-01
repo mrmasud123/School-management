@@ -100,14 +100,14 @@ const mainNavItems: NavItemWithSubMenu[] = [
         icon: UserCog,
     },
     {
-        title: 'Student Management',
-        href: '/student-management',
-        icon: Users,
-    },
-    {
         title: 'Staff Management',
         href: '/staff-management',
         icon: BarChart2,
+    },
+    {
+        title: 'Student Management',
+        href: '/student-management',
+        icon: Users,
     },
     
     {

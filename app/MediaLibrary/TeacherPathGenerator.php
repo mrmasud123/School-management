@@ -12,6 +12,7 @@ class TeacherPathGenerator implements PathGenerator
         return match ($media->collection_name) {
             'images' => 'teacher/images/',
             'files'  => 'teacher/files/',
+            'staff'  => 'staff/images/',
             default  => 'teacher/other/',
         };
     }
