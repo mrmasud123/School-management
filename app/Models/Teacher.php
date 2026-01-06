@@ -18,7 +18,12 @@ class Teacher extends Model implements HasMedia
 
     protected $with = ['media'];
 
-
+    protected $appends = ['photo_url'];
+    protected $hidden = ['media'];
+    public function getPhotoUrlAttribute()
+    {
+        return $this->getFirstMediaUrl('images') ?: null;
+    }
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('webp')

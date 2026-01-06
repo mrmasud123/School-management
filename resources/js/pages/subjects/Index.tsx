@@ -103,10 +103,10 @@ export default function Index({subjects}) {
                             Assign Subject
                         </Link>
                         <Link
-                            href={"#"}
-                            className="cursor-pointer px-3 py-1 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50 me-2"
+                            href={`/subjects/subject-teacher-mapping`}
+                            className="me-2 px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors duration-200"
                         >
-                            View trashed subjects
+                            Assign Teacher to Subject
                         </Link>
                         <input
                             type="text"

@@ -41,7 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/students/export/excel', [StudentController::class, 'export'])->name('students.export.excel');
     Route::get('/students/export/pdf', [StudentController::class, 'exportPdf'])->name('students.export.pdf');
     Route::resource('/students', StudentController::class)->names('admin.students');
-    
+
     Route::get('/trashed-students', [StudentController::class, 'trashed'])->name('trashed.students');
     Route::patch('/students/{id}/restore', [StudentController::class, 'restore'])
         ->name('students.restore');
@@ -52,25 +52,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/migrate', [StudentController::class, 'migrate'])->name('admin.students.migrate');
     Route::post('/migrate', [StudentController::class, 'migrateStudent'])->name('admin.students.migrate');
     Route::resource('/classes', StudentClassController::class)->names('admin.classes');
-    Route::get('/classes/class-wise-students/{classId}', [StudentClassController::class,'classWiseStudents'])->name('class.wise.students');
+    Route::get('/classes/class-wise-students/{classId}', [StudentClassController::class, 'classWiseStudents'])->name('class.wise.students');
 
     Route::resource('/sections', SectionController::class)->names('admin.sections');
     Route::get('/fetch-sections-student-admission/{classId}', [SectionController::class, 'fetchSections'])->name('fetch.sections');
-    Route::get('/sections/section-wise-students/{sectionId}', [SectionController::class,'sectionWiseStudents'])->name('section.wise.students');
+    Route::get('/sections/section-wise-students/{sectionId}', [SectionController::class, 'sectionWiseStudents'])->name('section.wise.students');
     Route::get('/sections-wise-subjects/{sectionId}', [SubjectsController::class, 'sectionsWiseSubjects'])->name('sections.wise.subjects');
-    Route::delete('/subject-mapping/{sectionId}/{subjectId}', [SubjectsController::class, 'subjectMapping'])->name('subject.mapping');
+    Route::delete('/subject-mapping/{sectionId}/{subjectId}', [SubjectsController::class, 'subjectSectionMapping'])->name('subject.mapping');
+
+    Route::get('/subjects/subject-teacher-mapping', [SubjectsController::class, 'subjectTeacherMapping'])->name('admin.subject.teacher.mapping');
+    Route::get('/classes/{class}/sections', [SubjectsController::class, 'sections']);
+    Route::get('/sections/{sectionId}/subjects', [SubjectsController::class, 'subjects']);
+    Route::get('/sections/{sectionId}/subjects/{subjectId}/teachers', [SubjectsController::class, 'teachers']);
+    Route::post('/subject-section-teacher/mappping', [SubjectsController::class, 'subjectSectionTeacherMapping'])->name('subject.section.teacher.mapping');
+    // Route::get('/sections/{section}/teachers', [SubjectsController::class, 'teachers']);
+    // Route::get('/sections/{teacher}/subjects', [SubjectsController::class, 'subjects']);
+    // Route::post('/teacher-subject-mapping', [SubjectsController::class, 'store']);
 
     Route::get('/subjects/assign', [SubjectsController::class, 'assignSubject'])->name('admin.subjects.assign');
     Route::post('/subject-mapping', [SubjectsController::class, 'mapSubject'])->name('admin.subjects.mapping');
     Route::resource('/subjects', SubjectsController::class)->names('admin.subjects');
 
     Route::resource('/student-management', StudentManagementController::class)->names('admin.student');
-    
+
     Route::get('/parent-accounts/student-parent-mapping/{parentId}', [ParentAccountsController::class, 'mapping'])->name('admin.parents.accounts.mapping');
     Route::post('/parent-student-mapping', [ParentAccountsController::class, 'parentStudentMapping'])->name('admin.parents.student.mapping');
     Route::resource('/parent-accounts', ParentAccountsController::class)->names('admin.parent.accounts');
     Route::get('/admin/remove-parent-student-mapping/{parentId}/{studentId}', [ParentAccountsController::class, 'removeMapping'])->name('admin.parents.accounts.remove');
-    
+
     //Staff Management
     Route::get('/staff-management/trashed-staffs', [StaffManagementController::class, 'trashed'])->name('admin.staff.trashed');
     Route::patch('/staff-management/restore/{staff}', [StaffManagementController::class, 'restore'])->name('admin.staff.restore');
@@ -83,7 +92,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/student-details', [StudentDetailsController::class, 'index'])->name('admin.idcard');
     Route::get('/fetch-students/{sectionId}', [StudentDetailsController::class, 'fetchStudents'])->name('fetch.students');
     Route::get('/student-all-details/{studentId}', [StudentDetailsController::class, 'studentAllDetails'])->name('student.all.details');
-    
+
     Route::get('/accountants', [\App\Http\Controllers\Admin\AccountantsController::class, 'index'])->name('admin.accountants');
     Route::get('/parent-complaints', [\App\Http\Controllers\Admin\ParentComplaintsController::class, 'index'])->name('admin.parent.complaints');
     Route::get('/classes-sections', [\App\Http\Controllers\Admin\ClassesSectionsController::class, 'index'])->name('admin.classes.sections');
@@ -97,22 +106,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('/users', UserController::class)->names('admin.users');
 
-    
+
     //Teachers
     Route::post('/teachers/{teacher}', [TeachersController::class, 'update']);
 
     Route::get('/teachers/trashed-teachers', [TeachersController::class, 'trashed'])->name('trashed.teachers');
     Route::resource('/teachers', TeachersController::class)->names('admin.teachers');
     Route::patch('/{id}/restore', [TeachersController::class, 'restore'])
-    ->name('teachers.restore');
+        ->name('teachers.restore');
     // Route::post();
 
-    Route::middleware(['role:teacher'])->group(function() {
+    Route::middleware(['role:teacher'])->group(function () {
         Route::get('/test', function () {
             return "Hello Admin";
         });
     });
-
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';

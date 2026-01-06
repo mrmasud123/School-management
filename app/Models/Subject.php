@@ -9,4 +9,8 @@ class Subject extends Model
 {
     use SoftDeletes;
     protected $guarded=[];
+    
+    public function teacher(){
+        return $this->hasOne(Teacher::class, 'id');
+    }
 }

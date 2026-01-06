@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SubjectStoreRequest;
 use App\Models\SchoolClass;
 use App\Models\Section;
+use App\Models\SectionTeacherSubject;
 use App\Models\Subject;
 use App\Models\SubjectSectionMapping;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Teacher;
+use Illuminate\Validation\ValidationException;
 
 class SubjectsController extends Controller
 {
@@ -122,7 +125,7 @@ class SubjectsController extends Controller
         return $section;
     }
 
-    public function subjectMapping($sectionId, $subjectId)
+    public function subjectSectionMapping($sectionId, $subjectId)
     {
         $subject = SubjectSectionMapping::where('section_id', $sectionId)
             ->where('subject_id', $subjectId)
@@ -136,5 +139,93 @@ class SubjectsController extends Controller
         $subject->each->delete();
 
         return redirect()->back()->with('success', 'Subject removed successfully.');
+    }
+
+    public function subjectTeacherMapping()
+    {
+        $classes = SchoolClass::all(); 
+        return Inertia::render('subjects/TeacherMapping', compact('classes'));
+    }
+    
+    public function sections($classId)
+    {
+        return Section::where('class_id', $classId)->get();
+    }
+    
+    public function subjects($sectionId)
+    {
+        
+        $sectionWiseData= SectionTeacherSubject::with(['teacher:id,employee_id,first_name,last_name','subject:id,name'])->where('section_id', $sectionId)->get();
+        $sectionWiseSubject=SubjectSectionMapping::with('subject')
+            ->where('section_id', $sectionId)
+            ->get()
+            ->pluck('subject')
+            ->unique('id')
+            ->values();
+            
+        return [$sectionWiseData,$sectionWiseSubject];
+    }
+
+    public function teachers()
+    {
+        // return SectionTeacherSubject::whereNot([
+        //     'section_id' => $sectionId,
+        //     'subject_id' => $subjectId,
+        // ])
+        //     ->with('teacher:id,first_name,last_name')
+        //     ->get()
+        //     ->pluck('teacher')
+        //     ->unique('id')
+        //     ->values();
+        return Teacher::all();
+    }
+
+    public function subjectSectionTeacherMapping(Request $request)
+    {
+        $classId   = $request->input('class_id');
+        $sectionId = $request->input('section_id');
+        $teacherId = $request->input('teacher_id');
+        $subjectId = $request->input('subject_id');
+
+        $request->validate([
+            'class_id'   => 'required|exists:classes,id',
+            'section_id' => 'required|exists:sections,id',
+            'teacher_id' => 'required|exists:teachers,id',
+            'subject_id' => 'required|exists:subjects,id',
+        ]);
+
+
+        $alreadyAssigned = SectionTeacherSubject::where('class_id', $classId)
+            ->where('section_id', $sectionId)
+            ->where('subject_id', $subjectId)
+            ->exists();
+
+        if ($alreadyAssigned) {
+            throw ValidationException::withMessages([
+                'subject_id' => 'This subject is already assigned to this class and section.'
+            ]);
+        }
+
+
+        $exists = SectionTeacherSubject::where('class_id', $classId)
+            ->where('section_id', $sectionId)
+            ->where('teacher_id', $teacherId)
+            ->where('subject_id', $subjectId)
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'duplicate' => 'This teacher is already assigned to this subject in this class and section.'
+            ]);
+        }
+
+        SectionTeacherSubject::create([
+            'class_id'   => $classId,
+            'section_id' => $sectionId,
+            'teacher_id' => $teacherId,
+            'subject_id' => $subjectId
+        ]);
+
+        return redirect()->back()->with('success', 'Mapping created successfully!');
     }
 }

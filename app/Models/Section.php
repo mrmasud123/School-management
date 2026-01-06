@@ -20,4 +20,8 @@ class Section extends Model
     public function subjects(){
         return $this->belongsToMany(Subject::class, 'subject_section_mappings', 'section_id', 'subject_id')->withTimestamps();
     }
+    
+    public function teachers(){
+        return $this->hasMany(Teacher::class);
+    }
 }

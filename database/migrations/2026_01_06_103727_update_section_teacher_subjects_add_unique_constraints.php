@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('section_teacher_mappings', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('section_teacher_subjects', function (Blueprint $table) {
+            $table->unique(['class_id','section_id','subject_id','teacher_id'], 'sts_class_section_subject_teacher_unique');
         });
     }
 
@@ -22,6 +21,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('section_teacher_mappings');
+        //
     }
 };
