@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import AppLayout from '@/layouts/app-layout';
-import { Link,router } from '@inertiajs/react';
-import {route} from 'ziggy-js';
+import { Link, router } from '@inertiajs/react';
+import { route } from 'ziggy-js';
 
 import {
     Select,
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import toast from 'react-hot-toast';
 import { Button } from "@/components/ui/button"
+import { Spinner } from '@/components/ui/spinner';
 
 interface Subject {
     id: number;
@@ -70,10 +71,11 @@ interface StudentsProps {
     subjects: Subject[]
 }
 
-export default function Students({ students, section, subjects }: StudentsProps) {
+export default function Students({ students, section }: StudentsProps) {
+    console.log(section);
     const baseURL = import.meta.env.VITE_APP_URL as string;
     const [filterText, setFilterText] = useState('');
-    console.log('subjects', subjects);
+    const [removing, setRemoving] = useState(false);
     const updateStatus = (id: number, status: string) => {
         router.put(`/students/${id}/status`, { status }, {
             onSuccess: () => toast.success("Status updated"),
@@ -96,8 +98,6 @@ export default function Students({ students, section, subjects }: StudentsProps)
     const downloadIdCard = (id: number) => {
         window.open(`/students/idcard/${id}`, "_blank");
     };
-
-    
 
     const columns: TableColumn<Student>[] = [
         {
@@ -126,7 +126,7 @@ export default function Students({ students, section, subjects }: StudentsProps)
         },
         {
             name: 'Class Level',
-            center: true,
+            // center: true,
             cell: (row) => (
                 <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded-md">
                     CLASS {row.student_class?.name ?? 'N/A'}
@@ -206,6 +206,25 @@ export default function Students({ students, section, subjects }: StudentsProps)
         }
     ];
 
+    const removeSubject = async (classId, sectionId, subjectId, teacherId) => {
+        console.log(classId, sectionId, subjectId, teacherId);
+
+        router.delete('/section-subject-teacher-mapping-remove', {
+            data: {
+                class_id: classId,
+                section_id: sectionId,
+                subject_id: subjectId,
+                teacher_id: teacherId,
+            },
+            onSuccess: () => {
+                toast.success("Subject removed successfully!");
+            },
+            onError: () => {
+                toast.error("Failed to remove subject");
+            },
+        });
+    };
+
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Students', href: '/students' }]}>
@@ -214,37 +233,65 @@ export default function Students({ students, section, subjects }: StudentsProps)
                 <h1 className="text-2xl font-bold mb-4">
                     Assigned Subjects for Section{' '}
                     <span className="bg-green-500 text-white rounded-md px-3 py-1">
-                        {section.name}
+                        {section?.name}
                     </span>
                 </h1>
-
-                {subjects?.subjects?.length === 0 ? (
+                {section?.subjects?.length === 0 ? (
                     <p className="text-gray-500">
                         No subjects assigned to this section.
                     </p>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {subjects?.subjects?.map((subject) => (
-                            <div
-                                key={subject.id}
-                                className="rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition"
-                            >
-                                <h3 className="text-lg font-bold text-gray-800">
-                                    {subject.name}
-                                </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {section.subjects?.map((subject) => {
+                            const isAssigned = subject?.teacher_assignments ?? null;
+                            return (
+                                <div
+                                    key={subject.id}
+                                    className={`border rounded-lg p-4 shadow-sm flex items-start justify-between
+                                        ${isAssigned ? 'bg-white' : 'bg-red-50 border-red-400'}
+                                    `}
+                                >
+                                    <div>
+                                        <h3 className="font-semibold">
+                                            {subject.name}
+                                        </h3>
+                                        <p className={`text-sm mt-1 ${isAssigned ? 'text-gray-600' : 'text-red-600 font-medium'}`}>
+                                            Teacher: {isAssigned
+                                                ? `${subject?.teacher_assignments?.teacher?.first_name} ${subject?.teacher_assignments?.teacher?.last_name}`
+                                                : 'Not Assigned'}
+                                        </p>
 
-                                <span className="inline-block mt-2 text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                                    Active
-                                </span>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            Assigned on{" "}
+                                            {new Date(subject.created_at).toLocaleDateString()}
+                                        </p>
 
-                                <p className="mt-3 text-xs text-gray-500">
-                                    Assigned on{' '}
-                                    {new Date(
-                                        subject.pivot.created_at
-                                    ).toLocaleDateString()}
-                                </p>
-                            </div>
-                        ))}
+                                        <Button
+                                            type="submit"
+                                            disabled={removing}
+                                            className="flex cursor-pointer items-center gap-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                            onClick={()=> removeSubject(
+                                                section?.class_id,
+                                                subject?.pivot?.section_id,
+                                                subject?.pivot?.subject_id,
+                                                subject?.teacher_assignments?.teacher?.id
+                                            )}
+                                        >
+                                            {removing ? (
+                                                <>
+                                                    <Spinner />
+                                                    Removing...
+                                                </>
+                                            ) : (
+                                                "Remove"
+                                            )}
+                                        </Button>
+                                    </div>
+
+                                    <img className="w-15 h-15 rounded-full object-cover" src={subject?.teacher_assignments?.teacher?.photo_url} alt="Teacher Image" />
+                                </div>
+                            )
+                        })}
                     </div>
                 )}
             </div>
@@ -253,7 +300,7 @@ export default function Students({ students, section, subjects }: StudentsProps)
                 <h1 className="text-2xl font-bold mb-4">
                     Section{' '}
                     <span className="bg-green-500 text-white rounded-md px-3 py-1">
-                        {section.name}
+                        {section?.name}
                     </span>{' '}
                     Students
                 </h1>

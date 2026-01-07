@@ -228,4 +228,32 @@ class SubjectsController extends Controller
 
         return redirect()->back()->with('success', 'Mapping created successfully!');
     }
+    
+    public function removeSectionSubjectTeacherMapping(Request $request)
+{
+    $data = $request->validate([
+        'class_id'   => 'required|exists:classes,id',
+        'section_id' => 'required|exists:sections,id',
+        'teacher_id' => 'required|exists:teachers,id',
+        'subject_id' => 'required|exists:subjects,id',
+    ]);
+
+    $mapping = SectionTeacherSubject::where('class_id', $data['class_id'])
+        ->where('section_id', $data['section_id'])
+        ->where('teacher_id', $data['teacher_id'])
+        ->where('subject_id', $data['subject_id'])
+        ->first();
+
+    if (!$mapping) {
+        throw ValidationException::withMessages([
+            'mapping' => 'The selected subject-teacher mapping does not exist.'
+        ]);
+    }
+
+    $mapping->delete();
+    
+
+    return redirect()->back()->with('success', 'Subject removed successfully.');
+}
+
 }

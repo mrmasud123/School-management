@@ -59,15 +59,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sections/section-wise-students/{sectionId}', [SectionController::class, 'sectionWiseStudents'])->name('section.wise.students');
     Route::get('/sections-wise-subjects/{sectionId}', [SubjectsController::class, 'sectionsWiseSubjects'])->name('sections.wise.subjects');
     Route::delete('/subject-mapping/{sectionId}/{subjectId}', [SubjectsController::class, 'subjectSectionMapping'])->name('subject.mapping');
+    Route::delete('/section-subject-teacher-mapping-remove', [SubjectsController::class, 'removeSectionSubjectTeacherMapping'])->name('admin.section.subject.teacher.mapping.remove');
 
     Route::get('/subjects/subject-teacher-mapping', [SubjectsController::class, 'subjectTeacherMapping'])->name('admin.subject.teacher.mapping');
     Route::get('/classes/{class}/sections', [SubjectsController::class, 'sections']);
     Route::get('/sections/{sectionId}/subjects', [SubjectsController::class, 'subjects']);
     Route::get('/sections/{sectionId}/subjects/{subjectId}/teachers', [SubjectsController::class, 'teachers']);
-    Route::post('/subject-section-teacher/mappping', [SubjectsController::class, 'subjectSectionTeacherMapping'])->name('subject.section.teacher.mapping');
-    // Route::get('/sections/{section}/teachers', [SubjectsController::class, 'teachers']);
-    // Route::get('/sections/{teacher}/subjects', [SubjectsController::class, 'subjects']);
-    // Route::post('/teacher-subject-mapping', [SubjectsController::class, 'store']);
+    Route::post('/subject-section-teacher/mappping', [SubjectsController::class, 'subjectSectionTeacherMapping'])->name('subject.section.teacher.mapping'); 
 
     Route::get('/subjects/assign', [SubjectsController::class, 'assignSubject'])->name('admin.subjects.assign');
     Route::post('/subject-mapping', [SubjectsController::class, 'mapSubject'])->name('admin.subjects.mapping');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SchoolClass;
 use App\Models\Section;
+use App\Models\SectionTeacherSubject;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -174,9 +175,13 @@ public function update(Request $request, string $id)
 
     public function sectionWiseStudents($sectionId)
     {
-        $subjects = Section::with('subjects')->find($sectionId);
+        $section = Section::with([
+            'subjects.teacherAssignments' => function ($q) use ($sectionId) {
+                $q->where('section_id', $sectionId)->with('teacher:id,first_name,last_name');
+            }
+        ])->findOrFail($sectionId);
         $students = Student::with('studentClass', 'section')->orderByDesc('id')->where('section_id', $sectionId)->get();
-        $section = Section::findOrFail($sectionId);
-        return Inertia::render('sections/Students', ['students' => $students, 'section' => $section, 'subjects' => $subjects]);
+        // $section = Section::findOrFail($sectionId);
+        return Inertia::render('sections/Students', ['students' => $students, 'section' => $section]);
     }
 }

@@ -78,11 +78,9 @@ export default function TeacherMapping({ classes }) {
             onFinish: () => setSubmitting(false),
             onSuccess: (data) => {
                 toast.success("Subject assigned successfully!");
-                form.reset();
-                setSections([]);
-                setSubjects([]);
-                setTeachers([]);
+
                 setSubmitting(false);
+                window.location.reload();
             },
             onError: (errors) => {
                 console.log(errors);

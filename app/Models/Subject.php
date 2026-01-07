@@ -13,4 +13,11 @@ class Subject extends Model
     public function teacher(){
         return $this->hasOne(Teacher::class, 'id');
     }
+     
+    public function teacherAssignments()
+    {
+        return $this->hasOne(SectionTeacherSubject::class);
+    }
+ 
+
 }
