@@ -23,27 +23,32 @@ class StudentDetailsController extends Controller
 
     public function generateIdCard($id)
     {
-        $student = Student::with('studentClass', 'section')->find($id);
+        $student = Student::with('studentClass', 'section')->findOrFail($id);
 
         $data = $student->admission_no . "- Class " . $student->studentClass?->name;
-
 
         $generator = new BarcodeGeneratorPNG();
         $barcode = base64_encode(
             $generator->getBarcode($data, $generator::TYPE_CODE_128)
         );
 
+        $photoPath = public_path(
+            str_replace(asset(''), '', $student->photo_url)
+        );
+
+
         $pdf = Pdf::loadView('pdf.id-card', [
             'student' => $student,
             'barcode' => $barcode,
-            'barcode_text' => $data   
+            'barcode_text' => $data,
+            'photoPath' => $photoPath,
         ]);
-
 
         return $pdf->stream('id-card-'.$student->admission_no.'.pdf');
     }
-    
-    
+
+
+
     public function fetchStudents($sectionId)
     {
         $students = Student::where('section_id', $sectionId)
@@ -51,11 +56,11 @@ class StudentDetailsController extends Controller
 
         return response()->json(['students' => $students]);
     }
-    
+
     public function studentAllDetails($studentId){
         $student = Student::with('studentClass', 'section')->find($studentId);
         if (!$student) {
-            return response()->json(['message' => 'Student not found'], 404);  
+            return response()->json(['message' => 'Student not found'], 404);
         }
         return response()->json(['student' => $student]);
     }

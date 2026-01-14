@@ -62,7 +62,7 @@ class RolesController extends Controller
     public function edit(string $id)
     {
 
-        
+
     }
 
     /**
@@ -87,7 +87,7 @@ class RolesController extends Controller
     public function destroy(string $id)
     {
         $role = Role::findOrFail($id);
-        $role->delete();  
+        $role->delete();
 
         return redirect()->back()->with('success', 'Role deleted successfully!');
     }
@@ -97,7 +97,6 @@ class RolesController extends Controller
         $role = Role::findOrFail($id);
         $permissions = Permission::all();
 
-        // Get currently assigned permissions
         $rolePermissions = $role->permissions->pluck('id')->toArray();
 
         return Inertia::render('roles/AddPermission', [
@@ -117,7 +116,6 @@ class RolesController extends Controller
             'selectedPermissions.*' => 'exists:permissions,id',
         ]);
 
-        // Sync permissions
         $role->syncPermissions($request->selectedPermissions ?? []);
 
         return redirect()->back()->with('success', 'Permissions updated successfully!');

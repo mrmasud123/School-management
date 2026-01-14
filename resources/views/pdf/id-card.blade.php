@@ -71,13 +71,24 @@
             font-size: 12px;
         }
 
-        /* Fix for image stretching in Dompdf */
+          .photo-container {
+              width: 100px;
+              height: 100px;
+              margin: 15px auto;
+              border: 2px solid #003366;
+              border-radius: 8px;
+              overflow: hidden;
+              text-align: center;
+              line-height: 100px; /* vertical centering trick */
+          }
+
         .photo-container img {
-            display: block;
             max-width: 100%;
             max-height: 100%;
+            vertical-align: middle;
         }
     </style>
+
 </head>
 
 <body>
@@ -86,18 +97,12 @@
         <h5>{{ config('app.name', 'School Name') }}</h5>
     </div>
 
-    <div class="photo-container" style="
-    width: 100px;
-    height: 100px;
-    margin: 15px auto 10px auto;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 2px solid #003366;
-    background-image: url('{{ public_path('/storage/' . $student->photo) }}');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-"></div>
+
+    <div class="photo-container">
+        @if(file_exists($photoPath))
+        <img src="{{ $photoPath }}"  alt="Student Photo">
+        @endif
+    </div>
 
 
     <div class="info">
@@ -110,7 +115,7 @@
     </div>
 
     <div class="barcode">
-        <img src="data:image/png;base64,{{ $barcode }}" width="220" height="60">
+        <img src="data:image/png;base64,{{ $barcode }}" width="220" height="50">
     </div>
 
     <div class="footer">

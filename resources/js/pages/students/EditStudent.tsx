@@ -11,6 +11,7 @@ import { X } from "lucide-react";
 
 export default function EditStudent({ classes,all_section,student }) {
     const baseURL= import.meta.env.VITE_APP_URL;
+    console.log(student);
     const form = useForm({
         first_name: student?.first_name || "",
         last_name: student?.last_name || "",
@@ -38,7 +39,7 @@ export default function EditStudent({ classes,all_section,student }) {
         admission_no: student?.admission_no ||"",
     });
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-    const [existingImage, setExistingImage] = useState(student?.photo || null);
+    const [existingImage, setExistingImage] = useState(student?.photo_url || null);
     const [loading, setLoading]= useState(false);
     const [sections, setSections] = useState<Section[]>([]);
     const [loadSection, setLoadSection] = useState(false);
@@ -221,11 +222,11 @@ export default function EditStudent({ classes,all_section,student }) {
                                         />
                                     )}
 
-                                    {student?.photo && existingImage && (
+                                    {student?.photo_url && existingImage && (
                                         <div className="relative mt-3 w-40 h-40">
                                             <img
                                                 className="object-cover rounded-md border h-full w-full"
-                                                src={`${baseURL}/storage/${student.photo}`}
+                                                src={`${student.photo_url}`}
                                                 alt=""
                                             />
 

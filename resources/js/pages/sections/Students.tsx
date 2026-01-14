@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import DataTable, { TableColumn } from 'react-data-table-component';
 import AppLayout from '@/layouts/app-layout';
 import { Link, router } from '@inertiajs/react';
-import { route } from 'ziggy-js';
+import { useState } from 'react';
+import DataTable, { TableColumn } from 'react-data-table-component';
 
 import {
     Select,
@@ -12,7 +11,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
-import { Edit, NotebookTabs, Trash } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,23 +19,31 @@ import {
     DropdownMenuItem,
     DropdownMenuShortcut,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import toast from 'react-hot-toast';
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
-
-interface Subject {
+import { useAuthorization } from '@/hooks/use-authorization';
+import { Edit, NotebookTabs } from 'lucide-react';
+import toast from 'react-hot-toast';
+interface Section {
     id: number;
     name: string;
-    status: number;
+    capacity: number;
+    students_count: number;
+}
+
+interface AssignedSubject {
+    id: number;
+    name: string;
     pivot: {
-        section_id: number;
-        subject_id: number;
         created_at: string;
-        updated_at: string | null;
     };
 }
 
+interface SectionSubjects {
+    id: number;
+    name: string;
+    subjects: AssignedSubject[];
+}
 interface Student {
     id: number;
     first_name: string;
@@ -53,39 +60,76 @@ interface Student {
     status: 'pending' | 'approved' | 'rejected';
     photo?: string;
 }
-
-interface Section {
+interface Teacher {
     id: number;
-    name: string;
-    subjects?: Subject[];
+    first_name: string;
+    last_name: string;
+    photo_url?: string;
+}
+interface TeacherAssignment {
+    id: number;
+    class_id: number;
+    section_id: number;
+    subject_id: number;
+    teacher_id: number;
+    created_at: string;
+    updated_at: string;
+    teacher: Teacher;
 }
 interface Subject {
     id: number;
     name: string;
     status: number;
-
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    pivot: {
+        section_id: number;
+        subject_id: number;
+        created_at: string;
+        updated_at: string;
+    };
+    teacher_assignments: TeacherAssignment | null;
+}
+interface Section {
+    id: number;
+    class_id: number;
+    name: string;
+    capacity: string;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    subjects: Subject[];
 }
 interface StudentsProps {
     students: Student[];
     section: Section;
-    subjects: Subject[]
+    subjects: Subject[];
 }
 
 export default function Students({ students, section }: StudentsProps) {
+    const { can, canAny, hasRoles } = useAuthorization();
     console.log(section);
     const baseURL = import.meta.env.VITE_APP_URL as string;
     const [filterText, setFilterText] = useState('');
     const [removing, setRemoving] = useState(false);
+    const [sectionSubjects, setSectionSubjects] =
+        useState<SectionSubjects | null>(null);
     const updateStatus = (id: number, status: string) => {
-        router.put(`/students/${id}/status`, { status }, {
-            onSuccess: () => toast.success("Status updated"),
-            onError: () => toast.error("Update failed")
-        });
-        console.log(status)
+        router.put(
+            `/students/${id}/status`,
+            { status },
+            {
+                onSuccess: () => toast.success('Status updated'),
+                onError: () => toast.error('Update failed'),
+            },
+        );
+        console.log(status);
     };
 
     const filteredUsers = students.filter((student) => {
-        const fullName = `${student.first_name} ${student.last_name}`.toLowerCase();
+        const fullName =
+            `${student.first_name} ${student.last_name}`.toLowerCase();
         const search = filterText.toLowerCase();
 
         return (
@@ -96,7 +140,7 @@ export default function Students({ students, section }: StudentsProps) {
     });
 
     const downloadIdCard = (id: number) => {
-        window.open(`/students/idcard/${id}`, "_blank");
+        window.open(`/students/idcard/${id}`, '_blank');
     };
 
     const columns: TableColumn<Student>[] = [
@@ -107,7 +151,7 @@ export default function Students({ students, section }: StudentsProps) {
         },
         {
             name: 'Admission No',
-            cell: row => (
+            cell: (row) => (
                 <span
                     onClick={() => {
                         navigator.clipboard.writeText(row.admission_no);
@@ -128,7 +172,7 @@ export default function Students({ students, section }: StudentsProps) {
             name: 'Class Level',
             // center: true,
             cell: (row) => (
-                <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded-md">
+                <span className="rounded-md bg-blue-500 px-2 py-1 text-xs text-white">
                     CLASS {row.student_class?.name ?? 'N/A'}
                 </span>
             ),
@@ -136,7 +180,7 @@ export default function Students({ students, section }: StudentsProps) {
         {
             name: 'Section',
             cell: (row) => (
-                <span className="px-2 py-1 bg-pink-500 text-white text-xs rounded-md">
+                <span className="rounded-md bg-pink-500 px-2 py-1 text-xs text-white">
                     {row.section?.name ?? 'N/A'}
                 </span>
             ),
@@ -144,7 +188,10 @@ export default function Students({ students, section }: StudentsProps) {
         {
             name: 'Admission Status',
             cell: (row) => (
-                <Select value={row.status} onValueChange={(value) => updateStatus(row.id, value)}>
+                <Select
+                    value={row.status}
+                    onValueChange={(value) => updateStatus(row.id, value)}
+                >
                     <SelectTrigger>
                         <SelectValue />
                     </SelectTrigger>
@@ -159,54 +206,72 @@ export default function Students({ students, section }: StudentsProps) {
         {
             name: 'Photo',
             cell: (row) => (
-                <div className="w-16 h-16 overflow-hidden rounded-md">
+                <div className="h-16 w-16 overflow-hidden rounded-md">
                     <img
                         src={
                             row.photo
                                 ? `${baseURL}/storage/${row.photo}`
                                 : '/images/avatar.png'
                         }
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                     />
                 </div>
             ),
         },
         {
             name: 'Action',
-            cell: row => (
+            cell: (row) => (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className='cursor-pointer'>Action</Button>
+                        <Button
+                            variant="outline"
+                            className={`cursor-pointer ${hasRoles(['admin', 'super admin']) ? '' : 'bg-red-400'}`}
+                        >
+                            {hasRoles(['admin', 'super admin'])
+                                ? 'Action'
+                                : 'Not allowed'}
+                        </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="" align="start">
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem className='cursor-pointer'>
-                                <Link
-                                    href={`/students/${row.id}/edit`}
-                                    className="px-3 flex items-center w-full py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200"
-                                >
-                                    Edit
-                                    <DropdownMenuShortcut><Edit className='text-white' /></DropdownMenuShortcut>
-                                </Link>
-                            </DropdownMenuItem>
+                    {hasRoles(['admin', 'super admin']) && (
+                        <DropdownMenuContent className="" align="start">
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <Link
+                                        href={`/students/${row.id}/edit`}
+                                        className="flex w-full items-center rounded-md bg-green-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-green-600"
+                                    >
+                                        Edit
+                                        <DropdownMenuShortcut>
+                                            <Edit className="text-white" />
+                                        </DropdownMenuShortcut>
+                                    </Link>
+                                </DropdownMenuItem>
 
-                            <DropdownMenuItem className='cursor-pointer'>
-                                <Button
-                                    className="px-3 cursor-pointer py-2 w-full bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
-                                    onClick={() => downloadIdCard(row.id)}
-                                >
-                                    Download ID Card
-                                    <DropdownMenuShortcut><NotebookTabs className='text-white' /></DropdownMenuShortcut>
-                                </Button>
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                    </DropdownMenuContent>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <Button
+                                        className="w-full cursor-pointer rounded-md bg-blue-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-blue-600"
+                                        onClick={() => downloadIdCard(row.id)}
+                                    >
+                                        Download ID Card
+                                        <DropdownMenuShortcut>
+                                            <NotebookTabs className="text-white" />
+                                        </DropdownMenuShortcut>
+                                    </Button>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                    )}
                 </DropdownMenu>
-            )
-        }
+            ),
+        },
     ];
 
-    const removeSubject = async (classId, sectionId, subjectId, teacherId) => {
+    const removeSubject = async (
+        classId: number,
+        sectionId: number,
+        subjectId: number,
+        teacherId: number,
+    ) => {
         console.log(classId, sectionId, subjectId, teacherId);
 
         router.delete('/section-subject-teacher-mapping-remove', {
@@ -217,22 +282,44 @@ export default function Students({ students, section }: StudentsProps) {
                 teacher_id: teacherId,
             },
             onSuccess: () => {
-                toast.success("Subject removed successfully!");
+                toast.success('Subject removed successfully!');
             },
             onError: () => {
-                toast.error("Failed to remove subject");
+                toast.error('Failed to remove subject');
             },
         });
     };
 
+    const handleRemoveSubject = (sectionId: number, subjectId: number) => {
+        // if (!sectionSubjects) return;
+
+        router.delete(`/subject-mapping/${sectionId}/${subjectId}`, {
+            onSuccess: (data) => {
+                toast.success('Subject removed successfully!');
+                console.log(data);
+                setSectionSubjects((prevState) => {
+                    if (!prevState) return prevState;
+
+                    return {
+                        ...prevState,
+                        subjects: prevState.subjects.filter(
+                            (sub) => sub.id !== subjectId,
+                        ),
+                    };
+                });
+            },
+            onError: (err) => {
+                toast.error(Object.values(err)[0] as string);
+            },
+        });
+    };
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Students', href: '/students' }]}>
-
             <div className="p-8">
-                <h1 className="text-2xl font-bold mb-4">
+                <h1 className="mb-4 text-2xl font-bold">
                     Assigned Subjects for Section{' '}
-                    <span className="bg-green-500 text-white rounded-md px-3 py-1">
+                    <span className="rounded-md bg-green-500 px-3 py-1 text-white">
                         {section?.name}
                     </span>
                 </h1>
@@ -241,74 +328,124 @@ export default function Students({ students, section }: StudentsProps) {
                         No subjects assigned to this section.
                     </p>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                         {section.subjects?.map((subject) => {
-                            const isAssigned = subject?.teacher_assignments ?? null;
+                            const isAssigned =
+                                subject?.teacher_assignments ?? null;
                             return (
                                 <div
                                     key={subject.id}
-                                    className={`border rounded-lg p-4 shadow-sm flex items-start justify-between
-                                        ${isAssigned ? 'bg-white' : 'bg-red-50 border-red-400'}
-                                    `}
+                                    className={`flex items-start justify-between rounded-lg border p-4 shadow-sm ${isAssigned ? 'bg-white' : 'border-red-400 bg-red-50'} `}
                                 >
                                     <div>
                                         <h3 className="font-semibold">
                                             {subject.name}
                                         </h3>
-                                        <p className={`text-sm mt-1 ${isAssigned ? 'text-gray-600' : 'text-red-600 font-medium'}`}>
-                                            Teacher: {isAssigned
+                                        <p
+                                            className={`mt-1 text-sm ${isAssigned ? 'text-gray-600' : 'font-medium text-red-600'}`}
+                                        >
+                                            Teacher:{' '}
+                                            {isAssigned
                                                 ? `${subject?.teacher_assignments?.teacher?.first_name} ${subject?.teacher_assignments?.teacher?.last_name}`
                                                 : 'Not Assigned'}
                                         </p>
 
-                                        <p className="text-xs text-gray-500 mt-2">
-                                            Assigned on{" "}
-                                            {new Date(subject.created_at).toLocaleDateString()}
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            Assigned on{' '}
+                                            {new Date(
+                                                subject.created_at,
+                                            ).toLocaleDateString()}
                                         </p>
 
-                                        <Button
-                                            type="submit"
-                                            disabled={removing}
-                                            className="flex cursor-pointer items-center gap-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                                            onClick={()=> removeSubject(
-                                                section?.class_id,
-                                                subject?.pivot?.section_id,
-                                                subject?.pivot?.subject_id,
-                                                subject?.teacher_assignments?.teacher?.id
+                                        <div className="mt-4 flex items-center justify-between">
+                                            {/* LEFT SIDE — Remove Subject */}
+
+                                            {/* RIGHT SIDE — Remove Mapping */}
+                                            {can('subject.remove-mapping') && (
+                                                <Button
+                                                    type="button"
+                                                    disabled={removing}
+                                                    className="rounded-md bg-red-600 px-4 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                                                    onClick={() =>
+                                                        handleRemoveSubject(
+                                                            subject.pivot
+                                                                .section_id,
+                                                            subject.pivot
+                                                                .subject_id,
+                                                        )
+                                                    }
+                                                >
+                                                    {removing ? (
+                                                        <>
+                                                            <Spinner />
+                                                            Removing...
+                                                        </>
+                                                    ) : (
+                                                        'Remove Subject'
+                                                    )}
+                                                </Button>
                                             )}
-                                        >
-                                            {removing ? (
-                                                <>
-                                                    <Spinner />
-                                                    Removing...
-                                                </>
-                                            ) : (
-                                                "Remove"
-                                            )}
-                                        </Button>
+                                            {can('subject.remove-mapping') &&
+                                                subject.teacher_assignments && (
+                                                    <Button
+                                                        type="button"
+                                                        disabled={removing}
+                                                        className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                                                        onClick={() =>
+                                                            removeSubject(
+                                                                section.class_id,
+                                                                subject.pivot
+                                                                    .section_id,
+                                                                subject.pivot
+                                                                    .subject_id,
+                                                                subject
+                                                                    ?.teacher_assignments
+                                                                    ?.teacher
+                                                                    ?.id,
+                                                            )
+                                                        }
+                                                    >
+                                                        {removing ? (
+                                                            <>
+                                                                <Spinner />
+                                                                Removing...
+                                                            </>
+                                                        ) : (
+                                                            'Remove Mapping'
+                                                        )}
+                                                    </Button>
+                                                )}
+                                        </div>
                                     </div>
 
-                                    <img className="w-15 h-15 rounded-full object-cover" src={subject?.teacher_assignments?.teacher?.photo_url} alt="Teacher Image" />
+                                    <img
+                                        className="h-15 w-15 rounded-full object-cover"
+                                        src={
+                                            subject?.teacher_assignments
+                                                ?.teacher?.photo_url
+                                        }
+                                        alt="Teacher Image"
+                                    />
                                 </div>
-                            )
+                            );
                         })}
                     </div>
                 )}
             </div>
 
             <div className="p-8">
-                <h1 className="text-2xl font-bold mb-4">
+                <h1 className="mb-4 text-2xl font-bold">
                     Section{' '}
-                    <span className="bg-green-500 text-white rounded-md px-3 py-1">
+                    <span className="rounded-md bg-green-500 px-3 py-1 text-white">
                         {section?.name}
                     </span>{' '}
                     Students
                 </h1>
 
-                <div className="flex items-center justify-between gap-4 mb-4">
+                <div className="mb-4 flex items-center justify-between gap-4">
                     <Link
                         href="/sections"
-                        className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        className="rounded-md bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
                     >
                         View Sections
                     </Link>
@@ -318,7 +455,7 @@ export default function Students({ students, section }: StudentsProps) {
                         placeholder="Search by ID, name, or email"
                         value={filterText}
                         onChange={(e) => setFilterText(e.target.value)}
-                        className="p-2 border rounded"
+                        className="rounded border p-2"
                     />
                 </div>
 
@@ -331,14 +468,14 @@ export default function Students({ students, section }: StudentsProps) {
                     customStyles={{
                         rows: {
                             style: {
-                                minHeight: "100px"
-                            }
+                                minHeight: '100px',
+                            },
                         },
                         header: {
                             style: {
-                                borderTopLeftRadius: "10px",
-                                borderTopRightRadius: "10px"
-                            }
+                                borderTopLeftRadius: '10px',
+                                borderTopRightRadius: '10px',
+                            },
                         },
                         pagination: {
                             style: {
@@ -350,7 +487,6 @@ export default function Students({ students, section }: StudentsProps) {
                     }}
                 />
             </div>
-
         </AppLayout>
     );
 }

@@ -16,8 +16,11 @@ class PermissionController extends Controller
     public function index()
     {
         $permissions= Permission::orderBy('id', 'desc')->get();
+        $permissions = Permission::all()
+            ->groupBy(fn ($perm) => explode('.', $perm->name)[0]);
+
         return Inertia::render('permissions/Permission', [
-            'permissions' => $permissions, 
+            'permissions' => $permissions,
         ]);
     }
 
@@ -37,12 +40,12 @@ class PermissionController extends Controller
         $request->validate([
             'name' => 'required|string|unique:permissions,name',
         ]);
-    
+
         Permission::create([
             'name' => $request->name,
             'guard_name' => 'web',
         ]);
-    
+
         return redirect()->back()->with('success', 'Permission created successfully!');
     }
 
@@ -75,7 +78,7 @@ class PermissionController extends Controller
         $permission->update([
             'name' => $request->name
         ]);
-    
+
         return redirect()->back()->with('success', 'Permission updated successfully!');
     }
 
@@ -85,8 +88,8 @@ class PermissionController extends Controller
     public function destroy(string $id)
     {
         $permission = Permission::findOrFail($id);
-        $permission->delete();   // <-- correct
-        
+        $permission->delete();
+
         return redirect()->back()->with('success', 'Permission deleted successfully!');
     }
 }

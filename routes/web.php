@@ -53,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/migrate', [StudentController::class, 'migrateStudent'])->name('admin.students.migrate');
     Route::resource('/classes', StudentClassController::class)->names('admin.classes');
     Route::get('/classes/class-wise-students/{classId}', [StudentClassController::class, 'classWiseStudents'])->name('class.wise.students');
+   
 
     Route::resource('/sections', SectionController::class)->names('admin.sections');
     Route::get('/fetch-sections-student-admission/{classId}', [SectionController::class, 'fetchSections'])->name('fetch.sections');

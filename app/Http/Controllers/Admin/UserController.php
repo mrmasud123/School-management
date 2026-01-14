@@ -72,8 +72,8 @@ class UserController extends Controller
     public function edit($id)
     {
         $authUser = auth()->user();
-        $isSuperAdmin = $authUser->roles->pluck('name')->contains('super admin');
-        if ($isSuperAdmin) {
+
+        if ($authUser->hasRole('super admin')) {
             $user = User::with('roles')->findOrFail($id);
 
             return Inertia::render('users/EditUser', [
@@ -81,8 +81,10 @@ class UserController extends Controller
                 'allRoles' => Role::all(),
             ]);
         }
+
         abort(403, 'Unauthorized | You do not have pemission to perform this action.');
     }
+
 
 
 
@@ -93,8 +95,7 @@ class UserController extends Controller
     {
 
         $authUser = auth()->user();
-        $isSuperAdmin = $authUser->roles->pluck('name')->contains('super admin');
-        if ($isSuperAdmin) {
+        if ($authUser->hasRole('super admin')) {
             $user = User::findOrFail($id);
 
             $request->validate([
@@ -131,10 +132,10 @@ class UserController extends Controller
     {
         $authUser = auth()->user();
         $isSuperAdmin = $authUser->roles->pluck('name')->contains('super admin');
-        if($isSuperAdmin){
+        if ($isSuperAdmin) {
             return "Hello ";
         }
-        
+
         abort(403, 'Unauthorized | You do not have pemission to perform this action.');
     }
 }

@@ -1,27 +1,26 @@
-import React, { useState } from 'react';
-import DataTable, { TableColumn } from 'react-data-table-component';
-import AppLayout from '@/layouts/app-layout';
-import { Link, router } from '@inertiajs/react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import AppLayout from '@/layouts/app-layout';
+import { Link } from '@inertiajs/react';
+import { useState } from 'react';
+import DataTable, { TableColumn } from 'react-data-table-component';
 
-import { Edit, NotebookTabs, Trash } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuPortal,
-    DropdownMenuSeparator,
     DropdownMenuShortcut,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { students } from '@/routes/section/wise';
+} from '@/components/ui/dropdown-menu';
+import { useAuthorization } from '@/hooks/use-authorization';
+import { Edit, Trash } from 'lucide-react';
 interface StudentsProps {
     parents: ParentAccount[];
 }
@@ -32,91 +31,86 @@ interface ParentAccount {
     last_name: string;
     phone: string;
     students: {
-        id: number,
-        first_name: string,
-        last_name: string,
+        id: number;
+        first_name: string;
+        last_name: string;
         student_class: {
-            id: number,
-            name:string
-        },
-        section:{
-            id: number,
-            name: string
-        }
-    }[],
-    student_class: { id: number; name: string; } | null;
-    section: { id: number; name: string; } | null;
+            id: number;
+            name: string;
+        };
+        section: {
+            id: number;
+            name: string;
+        };
+    }[];
+    student_class: { id: number; name: string } | null;
+    section: { id: number; name: string } | null;
     email: string;
     address: string | null;
     is_active: number;
 }
 export default function Index({ parents }: StudentsProps) {
-    console.log(parents)
+    const { can, canAny, hasRoles } = useAuthorization();
     const baseURL = import.meta.env.VITE_APP_URL;
     const [filterText, setFilterText] = useState('');
 
     const filteredUsers = parents.filter(
-        parent =>
+        (parent) =>
             parent.id.toString().includes(filterText) ||
-            (parent.first_name && parent.first_name.toLowerCase().includes(filterText.toLowerCase())) ||
-            (parent.last_name && parent.last_name.toLowerCase().includes(filterText.toLowerCase()))
+            (parent.first_name &&
+                parent.first_name
+                    .toLowerCase()
+                    .includes(filterText.toLowerCase())) ||
+            (parent.last_name &&
+                parent.last_name
+                    .toLowerCase()
+                    .includes(filterText.toLowerCase())),
     );
-    
+
     const columns: TableColumn<ParentAccount>[] = [
         // { name: 'ID', selector: row => row.id, sortable: true },
         {
             name: 'Parent name',
-            cell: row => `${row.first_name} ${row.last_name}`,
-            sortable: true
+            cell: (row) => `${row.first_name} ${row.last_name}`,
+            sortable: true,
         },
         {
             name: 'Contact',
-            cell: row => row.phone,
-            sortable: false,
-        },
-        {
-            name: 'E-mail',
-            cell: row => row.email,
+            cell: (row) => row.phone,
             sortable: false,
         },
         {
             name: 'Assigned Students',
-            cell: row => (
-                <div className="flex flex-wrap gap-2 max-w-xs">
+            cell: (row) => (
+                <div className="flex max-w-xs flex-wrap gap-2">
                     {row?.students?.length ? (
                         row.students.map((student, index) => (
                             <span
                                 key={index}
-                                className="
-                                    inline-flex items-center gap-2
-                                    px-3 py-1 rounded-full
-                                    bg-gradient-to-r from-blue-500 to-indigo-500
-                                    text-white text-xs font-medium
-                                    shadow-sm
-                                    hover:from-indigo-500 hover:to-blue-500
-                                    transition
-                                "
+                                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:from-indigo-500 hover:to-blue-500"
                             >
-                                <span className="w-6 h-6 flex items-center justify-center rounded-full bg-white/20 text-[10px]">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-[10px]">
                                     {student.first_name.charAt(0)}
                                     {student.last_name.charAt(0)}
                                 </span>
-                                {student.first_name} {student.last_name} <br /> Class: { student?.student_class?.name} <br /> Section: {student?.section?.name}
+                                {student.first_name} {student.last_name} <br />{' '}
+                                Class: {student?.student_class?.name} <br />{' '}
+                                Section: {student?.section?.name}
                             </span>
                         ))
                     ) : (
-                        <span className="text-gray-400 italic text-sm">
+                        <span className="text-sm text-gray-400 italic">
                             No students assigned
                         </span>
                     )}
                 </div>
-            )
+            ),
         },
-        
+
         {
             name: 'Account Status',
             width: '150px',
-            cell: row => (
+            cell: (row) => (
                 <Select
                     value={String(row.is_active)}
                     // onValueChange={(value) => updateStatus(row.id, value)}
@@ -134,79 +128,93 @@ export default function Index({ parents }: StudentsProps) {
         {
             name: 'Action',
 
-            cell: row => (
+            cell: (row) => (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className='cursor-pointer'>Action</Button>
+                        <Button
+                            variant="outline"
+                            className={`cursor-pointer ${hasRoles(['admin', 'super admin']) ? '' : 'bg-red-400'}`}
+                        >
+                            {hasRoles(['admin', 'super admin'])
+                                ? 'Action'
+                                : 'Not allowed'}
+                        </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="" align="start">
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem className='cursor-pointer'>
-                                <Link
-                                    href={`/parent-accounts/${row.id}/edit`}
-                                    className="px-3 flex items-center w-full py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200"
-                                >
-                                    Edit
-                                    <DropdownMenuShortcut><Edit className='text-white' /></DropdownMenuShortcut>
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className='cursor-pointer'>
-                                <Link
-                                    href={`/parent-accounts/student-parent-mapping/${row.id}`}
-                                    className="px-3 flex items-center w-full py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors duration-200"
-                                >
-                                    Assign Student
-                                    <DropdownMenuShortcut><Edit className='text-white ms-1' /></DropdownMenuShortcut>
-                                </Link>
-                            </DropdownMenuItem>
-                            
-                            <DropdownMenuItem className='cursor-pointer'>
-                                <Button
-                                    // onClick={() => handleDelete(row.id)}
-                                    className="px-3 flex items-center w-full py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
-                                >
-                                    Delete
-                                    <DropdownMenuShortcut><Trash className='text-white' /></DropdownMenuShortcut>
-                                </Button>
-                            </DropdownMenuItem>
+                    {hasRoles(['admin', 'super admin']) && (
+                        <DropdownMenuContent className="" align="start">
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <Link
+                                        href={`/parent-accounts/${row.id}/edit`}
+                                        className="flex w-full items-center rounded-md bg-green-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-green-600"
+                                    >
+                                        Edit
+                                        <DropdownMenuShortcut>
+                                            <Edit className="text-white" />
+                                        </DropdownMenuShortcut>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <Link
+                                        href={`/parent-accounts/student-parent-mapping/${row.id}`}
+                                        className="flex w-full items-center rounded-md bg-yellow-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-yellow-600"
+                                    >
+                                        Assign Student
+                                        <DropdownMenuShortcut>
+                                            <Edit className="ms-1 text-white" />
+                                        </DropdownMenuShortcut>
+                                    </Link>
+                                </DropdownMenuItem>
 
-                        </DropdownMenuGroup>
-                    </DropdownMenuContent>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <Button
+                                        // onClick={() => handleDelete(row.id)}
+                                        className="flex w-full items-center rounded-md bg-red-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-red-600"
+                                    >
+                                        Delete
+                                        <DropdownMenuShortcut>
+                                            <Trash className="text-white" />
+                                        </DropdownMenuShortcut>
+                                    </Button>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                    )}
                 </DropdownMenu>
             ),
 
-            sortable: false
+            sortable: false,
         },
-
     ];
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Parents', href: '/parent-accounts' }]}>
+        <AppLayout
+            breadcrumbs={[{ title: 'Parents', href: '/parent-accounts' }]}
+        >
             <div className="p-8">
-                <h1 className="text-2xl font-bold mb-4">Parents</h1>
-                <div className="flex items-center gap-4 mb-4 justify-between">
-                    <Link
-                        href={`/parent-accounts/create/`}
-                        className="cursor-pointer px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                        Create New Parent Account
-                    </Link>
+                <h1 className="mb-4 text-2xl font-bold">Parents</h1>
+                <div className="mb-4 flex items-center justify-between gap-4">
+                    {can('parent.create') && (
+                        <Link
+                            href={`/parent-accounts/create/`}
+                            className="cursor-pointer rounded-md bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            Create New Parent Account
+                        </Link>
+                    )}
 
                     <div className="flex items-center">
-                        
                         <input
                             type="text"
                             placeholder="Search by ID, name, or email"
                             value={filterText}
-                            onChange={e => setFilterText(e.target.value)}
-                            className="px-3 py-1  border border-gray-300 rounded"
+                            onChange={(e) => setFilterText(e.target.value)}
+                            className="rounded border border-gray-300 px-3 py-1"
                         />
                     </div>
                 </div>
 
-
                 <DataTable
-                    
                     columns={columns}
                     data={filteredUsers}
                     pagination
@@ -216,14 +224,14 @@ export default function Index({ parents }: StudentsProps) {
                     customStyles={{
                         rows: {
                             style: {
-                                minHeight: "130px"
-                            }
+                                minHeight: '130px',
+                            },
                         },
                         header: {
                             style: {
-                                borderTopLeftRadius: "10px",
-                                borderTopRightRadius: "10px"
-                            }
+                                borderTopLeftRadius: '10px',
+                                borderTopRightRadius: '10px',
+                            },
                         },
                         pagination: {
                             style: {

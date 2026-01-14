@@ -13,6 +13,7 @@ class TeacherPathGenerator implements PathGenerator
             'images' => 'teacher/images/',
             'files'  => 'teacher/files/',
             'staff'  => 'staff/images/',
+            'students' => 'students/images/',
             default  => 'teacher/other/',
         };
     }

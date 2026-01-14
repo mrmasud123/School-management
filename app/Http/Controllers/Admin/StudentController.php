@@ -34,6 +34,8 @@ class StudentController extends Controller
      */
     public function create()
     {
+        // $user = auth()->user();
+        // return $roles= $user->getRoleNames();
         $classes = SchoolClass::all();
         $sections = Section::all();
         return Inertia::render('students/AdmitStudent', ['classes' => $classes, 'sections' => $sections]);
@@ -44,80 +46,68 @@ class StudentController extends Controller
      */
     public function store(StudentAdmissionRequest $request)
     {
-        $data = $request->validated();
-        $uploadedImagePath = null;
+        $validated = $request->validated();
 
-        try {
-            DB::beginTransaction();
-            if ($request->hasFile('photo')) {
-                $uploadedImagePath = $request->file('photo')->store('uploads/students', 'public');
-                $data['photo'] = $uploadedImagePath;
+        $student = null;
+
+        DB::transaction(function () use ($validated, &$student) {
+
+            if (empty($validated['admission_no'])) {
+                $validated['admission_no'] = 'ADM' . time();
             }
 
-            if (empty($data['admission_no'])) {
-                $data['admission_no'] = 'ADM' . time();
-            }
+            $student = Student::create([
+                'admission_no' => $validated['admission_no'],
 
-            $studentData = [ 
-                'admission_no'      => $data['admission_no'] ?? 'ADM' . time(),
-     
-                'first_name'        => $data['first_name'],
-                'last_name'         => $data['last_name'],
-                'dob'               => $data['dob'],
-                'blood_group'       => $data['blood_group'] ?? null,
-                'gender'            => $data['gender'],
-     
-                'email'             => $data['email'] ?? null,
-     
-                'father_name'       => $data['father_name'],
-                'mother_name'       => $data['mother_name'],
-                'father_occupation' => $data['father_occupation'] ?? null,
-                'mother_occupation' => $data['mother_occupation'] ?? null,
-     
-                'nationality'       => $data['nationality'],
-                'religion'          => $data['religion'] ?? null,
-     
-                'guardian_relation' => $data['guardian_relation'],
-                'guardian_phone'    => $data['guardian_phone'],
-     
-                'roll_no'           => $data['roll_no'] ?? null,
-                'class_id'          => $data['class_id'],
-                'section_id'        => $data['section_id'],
-                'admission_date'    => $data['admission_date'],
-                'academic_year'     => $data['academic_year'], 
-                'student_status'    => $data['student_status'] ?? 0,  
-                'status'            => $data['status'] ?? 'pending',  
-     
-                'previous_school'   => $data['previous_school'] ?? null,
-                'address'           => $data['address'] ?? null,
-                'photo'             => $data['photo'] ?? null,
-            ];
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'dob' => $validated['dob'],
+                'blood_group' => $validated['blood_group'] ?? null,
+                'gender' => $validated['gender'],
 
-            Student::create($studentData);
+                'email' => $validated['email'] ?? null,
 
-            DB::commit();
+                'father_name' => $validated['father_name'],
+                'mother_name' => $validated['mother_name'],
+                'father_occupation' => $validated['father_occupation'] ?? null,
+                'mother_occupation' => $validated['mother_occupation'] ?? null,
 
-            return redirect()
-                ->back()
-                ->with('success', 'Student admitted successfully!');
+                'nationality' => $validated['nationality'],
+                'religion' => $validated['religion'] ?? null,
 
-        }  catch (\Exception $e) {
-            DB::rollBack();
+                'guardian_relation' => $validated['guardian_relation'],
+                'guardian_phone' => $validated['guardian_phone'],
 
-            if ($uploadedImagePath && Storage::disk('public')->exists($uploadedImagePath)) {
-            Storage::disk('public')->delete($uploadedImagePath);
-            }
+                'roll_no' => $validated['roll_no'] ?? null,
+                'class_id' => $validated['class_id'],
+                'section_id' => $validated['section_id'],
+                'admission_date' => $validated['admission_date'],
+                'academic_year' => $validated['academic_year'],
+                'student_status' => $validated['student_status'] ?? 0,
+                'status' => $validated['status'] ?? 'pending',
 
-            Log::error('Student Admission Error', [
-                'message' => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine(),
-                'trace'   => $e->getTraceAsString(),
+                'previous_school' => $validated['previous_school'] ?? null,
+                'address' => $validated['address'] ?? null,
             ]);
+        });
 
-            return back()->with('error', 'Failed to admit student');
-        }
+        DB::afterCommit(function () use ($request, $student) {
+
+            if ($request->hasFile('photo')) {
+                $student->addMediaFromRequest('photo')
+                    ->usingFileName(
+                        'student_photo_' . $student->id . '.' .
+                        $request->file('photo')->extension()
+                    )
+                    ->toMediaCollection('students');
+            }
+        });
+
+        return redirect()
+            ->back()
+            ->with('success', 'Student admitted successfully!');
     }
+
 
 
 
@@ -143,84 +133,154 @@ class StudentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
+    //    public function edit(string $id)
+//    {
+//        $classes = SchoolClass::all();
+//        $sections = Section::withCount('students')->get();
+//        $student = Student::with('studentClass', 'section')->find($id);
+//        $student->photo_url = $student->getFirstMediaUrl('students') ?: null;
+//        return Inertia::render(
+//            'students/EditStudent',
+//            [
+//                'student' => $student,
+//                'classes' => $classes,
+//                'all_section' => $sections
+//            ]
+//        );
+//    }
+
     public function edit(string $id)
     {
         $classes = SchoolClass::all();
         $sections = Section::withCount('students')->get();
-        $student = Student::with('studentClass', 'section')->find($id);
-        return Inertia::render(
-            'students/EditStudent',
-            [
-                'student' => $student,
-                'classes' => $classes,
-                'all_section' => $sections
-            ]
-        );
+
+        $student = Student::with([
+            'studentClass',
+            'section',
+            'media', // MUST be here
+        ])->findOrFail($id);
+
+        return Inertia::render('students/EditStudent', [
+            'student' => $student,
+            'classes' => $classes,
+            'all_section' => $sections,
+        ]);
     }
+
 
     /**
      * Update the specified resource in storage.
      */
+    //    public function update(StudentAdmissionUpdateRequest $request, string $id)
+//    {
+//        $data = $request->validated();
+//        $uploadedImagePath = null;
+//
+//        try {
+//            DB::beginTransaction();
+//
+//            $student = Student::findOrFail($id); // Fetch the existing student
+//
+//            // Handle photo upload
+//            if ($request->hasFile('photo')) {
+//                // Delete old photo if exists
+//                if ($student->photo && Storage::disk('public')->exists($student->photo)) {
+//                    Storage::disk('public')->delete($student->photo);
+//                }
+//
+//                $uploadedImagePath = $request->file('photo')->store('uploads/students', 'public');
+//                $data['photo'] = $uploadedImagePath;
+//            }
+//
+//            // Map data for update
+//            $studentData = [
+//                'first_name' => $data['first_name'],
+//                'last_name' => $data['last_name'],
+//                'dob' => $data['dob'],
+//                'blood_group' => $data['blood_group'] ?? null,
+//                'gender' => $data['gender'],
+//                'email' => $data['email'] ?? null,
+//                'father_name' => $data['father_name'],
+//                'mother_name' => $data['mother_name'],
+//                'father_occupation' => $data['father_occupation'],
+//                'mother_occupation' => $data['mother_occupation'],
+//                'nationality' => $data['nationality'],
+//                'guardian_phone' => $data['guardian_phone'],
+//                'class_id' => $data['class_id'],
+//                'section_id' => $data['section_id'],
+//                'admission_date' => $data['admission_date'],
+//                'academic_year' => $data['academic_year'],
+//                'previous_school' => $data['previous_school'] ?? null,
+//                'address' => $data['current_address'] ?? null,
+//                'photo' => $data['photo'] ?? $student->photo,
+//                'status' => $data['status'],
+//            ];
+//
+//            $student->update($studentData); // Update existing student
+//
+//            DB::commit();
+//
+//            return redirect()
+//                ->back()
+//                ->with('success', 'Student updated successfully!');
+//        } catch (\Exception $e) {
+//            DB::rollBack();
+//
+//            if ($uploadedImagePath && Storage::disk('public')->exists($uploadedImagePath)) {
+//                Storage::disk('public')->delete($uploadedImagePath);
+//            }
+//        }
+//    }
+
     public function update(StudentAdmissionUpdateRequest $request, string $id)
     {
-        $data = $request->validated();
-        $uploadedImagePath = null;
+        $validated = $request->validated();
 
-        try {
-            DB::beginTransaction();
+        $student = Student::findOrFail($id);
 
-            $student = Student::findOrFail($id); // Fetch the existing student
+        DB::transaction(function () use ($student, $validated) {
 
-            // Handle photo upload
+            $student->update([
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'dob' => $validated['dob'],
+                'blood_group' => $validated['blood_group'] ?? null,
+                'gender' => $validated['gender'],
+                'email' => $validated['email'] ?? null,
+                'father_name' => $validated['father_name'],
+                'mother_name' => $validated['mother_name'],
+                'father_occupation' => $validated['father_occupation'] ?? null,
+                'mother_occupation' => $validated['mother_occupation'] ?? null,
+                'nationality' => $validated['nationality'],
+                'guardian_phone' => $validated['guardian_phone'],
+                'class_id' => $validated['class_id'],
+                'section_id' => $validated['section_id'],
+                'admission_date' => $validated['admission_date'],
+                'academic_year' => $validated['academic_year'],
+                'previous_school' => $validated['previous_school'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'status' => $validated['status'],
+            ]);
+        });
+
+        DB::afterCommit(function () use ($request, $student) {
+
             if ($request->hasFile('photo')) {
-                // Delete old photo if exists
-                if ($student->photo && Storage::disk('public')->exists($student->photo)) {
-                    Storage::disk('public')->delete($student->photo);
-                }
 
-                $uploadedImagePath = $request->file('photo')->store('uploads/students', 'public');
-                $data['photo'] = $uploadedImagePath;
+                $student->clearMediaCollection('students');
+
+                $student->addMediaFromRequest('photo')
+                    ->usingFileName(
+                        'student_photo_' . $student->id . '.' .
+                        $request->file('photo')->extension()
+                    )
+                    ->toMediaCollection('students');
             }
+        });
 
-            // Map data for update
-            $studentData = [
-                'first_name' => $data['first_name'],
-                'last_name' => $data['last_name'],
-                'dob' => $data['dob'],
-                'blood_group' => $data['blood_group'] ?? null,
-                'gender' => $data['gender'],
-                'email' => $data['email'] ?? null,
-                'father_name' => $data['father_name'],
-                'mother_name' => $data['mother_name'],
-                'father_occupation' => $data['father_occupation'],
-                'mother_occupation' => $data['mother_occupation'],
-                'nationality' => $data['nationality'],
-                'guardian_phone' => $data['guardian_phone'],
-                'class_id' => $data['class_id'],
-                'section_id' => $data['section_id'],
-                'admission_date' => $data['admission_date'],
-                'academic_year' => $data['academic_year'],
-                'previous_school' => $data['previous_school'] ?? null,
-                'address' => $data['current_address'] ?? null,
-                'photo' => $data['photo'] ?? $student->photo,
-                'status' => $data['status'],
-            ];
-
-            $student->update($studentData); // Update existing student
-
-            DB::commit();
-
-            return redirect()
-                ->back()
-                ->with('success', 'Student updated successfully!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            if ($uploadedImagePath && Storage::disk('public')->exists($uploadedImagePath)) {
-                Storage::disk('public')->delete($uploadedImagePath);
-            }
-        }
+        return redirect()->back()->with('success', 'Student updated successfully!');
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -248,11 +308,11 @@ class StudentController extends Controller
     public function migrateStudent(Request $request)
     {
         $validated = $request->validate([
-            'student_id'           => 'required|numeric|exists:students,id',
-            'from_class_id'        => 'required|numeric',
-            'from_section_id'      => 'required|numeric',
-            'to_class_id'          => 'required|numeric|exists:classes,id',
-            'to_section_id'        => 'required|numeric|exists:sections,id',
+            'student_id' => 'required|numeric|exists:students,id',
+            'from_class_id' => 'required|numeric',
+            'from_section_id' => 'required|numeric',
+            'to_class_id' => 'required|numeric|exists:classes,id',
+            'to_section_id' => 'required|numeric|exists:sections,id',
         ]);
 
         $student = Student::find($validated['student_id']);
@@ -287,7 +347,7 @@ class StudentController extends Controller
 
         try {
 
-            $student->class_id   = $validated['to_class_id'];
+            $student->class_id = $validated['to_class_id'];
             $student->section_id = $validated['to_section_id'];
             $student->save();
 
@@ -303,7 +363,7 @@ class StudentController extends Controller
 
             return response()->json([
                 'message' => 'Migration failed',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -357,13 +417,13 @@ class StudentController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $search   = $request->query('search');
-        $page     = (int) $request->query('page', 1);
-        $perPage  = (int) $request->query('per_page', 10);
+        $search = $request->query('search');
+        $page = (int) $request->query('page', 1);
+        $perPage = (int) $request->query('per_page', 10);
 
         $students = Student::query()
             ->with(['studentClass', 'section'])
-            ->when($search, function ($q) use($search) {
+            ->when($search, function ($q) use ($search) {
                 $q->where('id', 'like', "%{$search}%")
                     ->orWhere('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%");
@@ -374,7 +434,7 @@ class StudentController extends Controller
 
         $pdf = Pdf::loadView('pdf.students', [
             'students' => $students,
-            'page'     => $page,
+            'page' => $page,
         ])->setPaper('a4', 'landscape');
         return $pdf->download("students_page_{$page}.pdf");
     }
