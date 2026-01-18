@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class StudentClassController extends Controller
@@ -13,18 +14,44 @@ class StudentClassController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $classes= SchoolClass::withCount('students')->withCount('sections')->withSum('sections','capacity')->get();
-        return Inertia::render('StudentClass/Classes',['classes' => $classes]);
+        $perPage = $request->get('per_page', 10);
+        $page = $request->get('page', 1);
+        $search = $request->get('search');
+
+        $cacheKey = "classes:page={$page}:perPage={$perPage}:search={$search}";
+
+        $classes = Cache::tags(['classes'])->remember(
+            $cacheKey,
+            300,
+            function () use ($perPage, $page, $search) {
+                return SchoolClass::withCount('students')
+                    ->withCount('sections')
+                    ->withSum('sections', 'capacity')
+                    ->when($search, function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->paginate($perPage, ['*'], 'page', $page);
+            }
+        );
+
+        return Inertia::render('StudentClass/Classes', [
+            'classes' => $classes,
+            'filters' => [
+                'search' => $search,
+                'per_page' => $perPage,
+            ],
+        ]);
     }
+
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        $allClasses= SchoolClass::all();
+        $allClasses = SchoolClass::all();
         return Inertia::render('StudentClass/CreateClass');
     }
 
@@ -32,29 +59,29 @@ class StudentClassController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-{
-    $request->validate([
-        'class_name' => [
-            'required',
-            'unique:classes,name',
-            'numeric'
-        ]
-    ]);
+    {
+        $request->validate([
+            'class_name' => [
+                'required',
+                'unique:classes,name',
+                'numeric'
+            ]
+        ]);
 
-    $classCode = strtoupper('CLASS' . $request->input('class_name'));
+        $classCode = strtoupper('CLASS' . $request->input('class_name'));
 
 
-    if (SchoolClass::where('code', $classCode)->exists()) {
-        return redirect()->back()->withErrors(['class_name' => 'The generated class code already exists.'])->withInput();
+        if (SchoolClass::where('code', $classCode)->exists()) {
+            return redirect()->back()->withErrors(['class_name' => 'The generated class code already exists.'])->withInput();
+        }
+
+        SchoolClass::create([
+            'name' => $request->input('class_name'),
+            'code' => $classCode
+        ]);
+
+        return redirect()->back()->with('success', "Class Created!");
     }
-
-    SchoolClass::create([
-        'name' => $request->input('class_name'),
-        'code' => $classCode
-    ]);
-
-    return redirect()->back()->with('success', "Class Created!");
-}
 
 
     /**
@@ -89,10 +116,11 @@ class StudentClassController extends Controller
         //
     }
 
-    public function classWiseStudents($classId){
-//        $students= Student::with('studentClass.section')->orderByDesc('id')->where('class_id', $classId)->get();
-        $stdntClass= SchoolClass::with('sections')->findOrFail($classId);
-        $students=Student::with('sections')->where('class_id', $classId)->get();
-        return Inertia::render('StudentClass/ClassWiseStudents', ['students' =>$students, 'stdntClass'=>$stdntClass]);
+    public function classWiseStudents($classId)
+    {
+        //        $students= Student::with('studentClass.section')->orderByDesc('id')->where('class_id', $classId)->get();
+        $stdntClass = SchoolClass::with('sections')->findOrFail($classId);
+        $students = Student::with('sections')->where('class_id', $classId)->get();
+        return Inertia::render('StudentClass/ClassWiseStudents', ['students' => $students, 'stdntClass' => $stdntClass]);
     }
 }

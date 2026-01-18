@@ -7,15 +7,19 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Edit, NotebookTabs } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 
 import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
 interface ClassesProps {
     classes: StudentClass[];
+    filters: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
 interface StudentClass {
@@ -26,16 +30,31 @@ interface StudentClass {
     students_count: number;
     sections_count: number;
 }
-export default function Classes({ classes }: ClassesProps) {
-    const { can, canAny, hasRoles } = useAuthorization();
+export default function Classes({ classes, filters }: ClassesProps) {
+    const { can } = useAuthorization();
     const [filterText, setFilterText] = useState('');
+    const [search, setSearch] = useState(filters.search ?? '');
+    const [perPage, setPerPage] = useState(filters.per_page ?? 10);
     console.log(classes);
-    const filteredUsers = classes.filter(
-        (cls) =>
-            cls.id.toString().includes(filterText) ||
-            (cls.name &&
-                cls.name.toLowerCase().includes(filterText.toLowerCase())),
-    );
+    const fetchClasses = (
+        page = 1,
+        per_page = perPage,
+        searchText = search,
+    ) => {
+        router.get(
+            '/classes',
+            { page, per_page, search: searchText },
+            { preserveState: true, replace: true },
+        );
+    };
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            fetchClasses(1);
+        }, 400);
+
+        return () => clearTimeout(timeout);
+    }, [search]);
 
     const columns: TableColumn<StudentClass>[] = [
         {
@@ -132,19 +151,16 @@ export default function Classes({ classes }: ClassesProps) {
     return (
         <AppLayout breadcrumbs={[{ title: 'Classes', href: '/classes' }]}>
             <div className="p-8">
-                <h1 className="mb-4 text-2xl font-bold">Classes</h1>
-          <div className="mb-4 flex items-center justify-between gap-4">
-            {
-              can('class.create') && (
-                <Link
-                        href={`/classes/create/`}
-                        className="cursor-pointer rounded-md bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                        Create Class
-                    </Link>
-              )
-            }
-                    
+                <h1 className="mb-4 text-2xl font-bold">All Classes</h1>
+                <div className="mb-4 flex items-center justify-between gap-4">
+                    {can('class.create') && (
+                        <Link
+                            href={`/classes/create/`}
+                            className="cursor-pointer rounded-md bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            Create Class
+                        </Link>
+                    )}
 
                     <input
                         type="text"
@@ -156,13 +172,18 @@ export default function Classes({ classes }: ClassesProps) {
                 </div>
 
                 <DataTable
-                    title="All Classes"
                     columns={columns}
-                    data={filteredUsers}
+                    data={classes.data}
                     pagination
-                    selectableRows
-                    highlightOnHover
-                    pointerOnHover
+                    paginationServer
+                    paginationTotalRows={classes.total}
+                    paginationPerPage={perPage}
+                    paginationDefaultPage={classes.current_page}
+                    onChangePage={(page) => fetchClasses(page)}
+                    onChangeRowsPerPage={(newPerPage, page) => {
+                        setPerPage(newPerPage);
+                        fetchClasses(page, newPerPage);
+                    }}
                     customStyles={{
                         header: {
                             style: {

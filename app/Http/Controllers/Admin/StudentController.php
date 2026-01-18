@@ -9,9 +9,8 @@ use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -23,11 +22,55 @@ class StudentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $students = Student::with('studentClass', 'section')->orderByDesc('id')->get();
-        return Inertia::render('students/Students', ['students' => $students]);
+        $perPage = $request->get('per_page', 10);
+        $page = $request->get('page', 1);
+        $search = $request->get('search');
+
+        $cacheKey = "students:page={$page}:perPage={$perPage}:search={$search}";
+
+        $students = Cache::tags(['students'])->remember(
+            $cacheKey,
+            300,
+            function () use ($perPage, $search) {
+                return Student::select(
+                    'id',
+                    'first_name',
+                    'last_name',
+                    'guardian_phone',
+                    'class_id',
+                    'section_id',
+                    'status',
+                    'admission_no',
+                    'photo'
+                )
+                    ->with([
+                        'studentClass:id,name',
+                        'section:id,name',
+                    ])
+                    ->when($search, function ($q) use ($search) {
+                        $q->where(function ($qq) use ($search) {
+                            $qq->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                ->orWhere('admission_no', 'like', "%{$search}%")
+                                ->orWhere('id', $search);
+                        });
+                    })
+                    ->orderByDesc('id')
+                    ->paginate($perPage);
+            }
+        );
+
+        return Inertia::render('students/Students', [
+            'students' => $students,
+            'filters' => [
+                'search' => $search,
+                'per_page' => $perPage,
+            ],
+        ]);
     }
+
 
     /**
      * Show the form for creating a new resource.

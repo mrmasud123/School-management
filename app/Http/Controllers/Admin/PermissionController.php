@@ -15,9 +15,8 @@ class PermissionController extends Controller
      */
     public function index()
     {
-        $permissions= Permission::orderBy('id', 'desc')->get();
         $permissions = Permission::all()
-            ->groupBy(fn ($perm) => explode('.', $perm->name)[0]);
+            ->groupBy(fn($perm) => explode('.', $perm->name)[0]);
 
         return Inertia::render('permissions/Permission', [
             'permissions' => $permissions,
@@ -54,7 +53,7 @@ class PermissionController extends Controller
      */
     public function show(string $id)
     {
-        $permission= Permission::findOrFail($id);
+        $permission = Permission::findOrFail($id);
         return response()->json($permission);
     }
 
@@ -71,7 +70,7 @@ class PermissionController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $permission= Permission::findOrFail($id);
+        $permission = Permission::findOrFail($id);
         $request->validate([
             'name' => 'required|string|unique:permissions,name,' . $permission->id,
         ]);

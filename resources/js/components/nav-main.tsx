@@ -24,7 +24,7 @@ export function NavMain({ items = [] }: { items: NavItemWithSubMenu[] }) {
     };
 
     const { auth } = usePage().props;
-
+    console.log('auth');
     return (
         <SidebarGroup className="px-2 py-0">
             <SidebarMenu>

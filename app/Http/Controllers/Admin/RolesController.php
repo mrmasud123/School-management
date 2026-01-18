@@ -95,7 +95,7 @@ class RolesController extends Controller
     public function addPermissionToRole($id)
     {
         $role = Role::findOrFail($id);
-        $permissions = Permission::all();
+        $permissions = Permission::all()->groupBy(fn($perm) => explode('.', $perm->name)[0]);
 
         $rolePermissions = $role->permissions->pluck('id')->toArray();
 

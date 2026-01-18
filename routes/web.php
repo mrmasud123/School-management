@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\SubjectsController;
 use App\Http\Controllers\Admin\StudentDetailsController;
 use App\Http\Controllers\Admin\TeachersController;
 use App\Http\Controllers\Admin\StaffManagementController;
+use App\Http\Controllers\Admin\AccountsController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -31,7 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    Route::get('/students/idcard/{id}', [\App\Http\Controllers\Admin\StudentDetailsController::class, 'generateIdCard'])
+    Route::get('/students/idcard/{id}', [StudentDetailsController::class, 'generateIdCard'])
         ->name('students.idcard');
 
     Route::get('/products', [ProductController::class, 'index'])->name('products');
@@ -49,11 +50,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/{id}/force', [StudentController::class, 'forceDelete'])
         ->name('students.forceDelete');
 
-    Route::get('/migrate', [StudentController::class, 'migrate'])->name('admin.students.migrate');
-    Route::post('/migrate', [StudentController::class, 'migrateStudent'])->name('admin.students.migrate');
+    Route::get('/migrate', [StudentController::class, 'migrate'])->name('admin.students.migrate.get');
+    Route::post('/migrate', [StudentController::class, 'migrateStudent'])->name('admin.students.migrate.post');
     Route::resource('/classes', StudentClassController::class)->names('admin.classes');
     Route::get('/classes/class-wise-students/{classId}', [StudentClassController::class, 'classWiseStudents'])->name('class.wise.students');
-   
+
 
     Route::resource('/sections', SectionController::class)->names('admin.sections');
     Route::get('/fetch-sections-student-admission/{classId}', [SectionController::class, 'fetchSections'])->name('fetch.sections');
@@ -66,7 +67,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/classes/{class}/sections', [SubjectsController::class, 'sections']);
     Route::get('/sections/{sectionId}/subjects', [SubjectsController::class, 'subjects']);
     Route::get('/sections/{sectionId}/subjects/{subjectId}/teachers', [SubjectsController::class, 'teachers']);
-    Route::post('/subject-section-teacher/mappping', [SubjectsController::class, 'subjectSectionTeacherMapping'])->name('subject.section.teacher.mapping'); 
+    Route::post('/subject-section-teacher/mappping', [SubjectsController::class, 'subjectSectionTeacherMapping'])->name('subject.section.teacher.mapping');
 
     Route::get('/subjects/assign', [SubjectsController::class, 'assignSubject'])->name('admin.subjects.assign');
     Route::post('/subject-mapping', [SubjectsController::class, 'mapSubject'])->name('admin.subjects.mapping');
@@ -92,7 +93,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/fetch-students/{sectionId}', [StudentDetailsController::class, 'fetchStudents'])->name('fetch.students');
     Route::get('/student-all-details/{studentId}', [StudentDetailsController::class, 'studentAllDetails'])->name('student.all.details');
 
-    Route::get('/accountants', [\App\Http\Controllers\Admin\AccountantsController::class, 'index'])->name('admin.accountants');
+    Route::get('/accountants', [AccountsController::class, 'index'])->name('admin.accountants');
     Route::get('/parent-complaints', [\App\Http\Controllers\Admin\ParentComplaintsController::class, 'index'])->name('admin.parent.complaints');
     Route::get('/classes-sections', [\App\Http\Controllers\Admin\ClassesSectionsController::class, 'index'])->name('admin.classes.sections');
 

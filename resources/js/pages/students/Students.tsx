@@ -1,31 +1,25 @@
 import { Button } from '@/components/ui/button';
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Edit, NotebookTabs, Trash } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import toast from 'react-hot-toast';
-import { route } from 'ziggy-js';
-
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuShortcut,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useAuthorization } from '@/hooks/use-authorization';
-import { Edit, NotebookTabs, Trash } from 'lucide-react';
-interface StudentsProps {
-    students: Student[];
-}
 
 interface Student {
     id: number;
@@ -36,16 +30,47 @@ interface Student {
     section: { id: number; name: string } | null;
     status: string;
     admission_no: string;
-    photo: string | null;
     photo_url: string | null;
 }
-export default function Students({ students }: StudentsProps) {
-    const { can, canAny, hasRoles } = useAuthorization();
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const [perPage, setPerPage] = useState(10);
+interface StudentsProps {
+    students: {
+        data: Student[];
+        total: number;
+        per_page: number;
+        current_page: number;
+    };
+    filters: {
+        search?: string;
+        per_page?: number;
+    };
+}
 
-    const baseURL = import.meta.env.VITE_APP_URL;
+export default function Students({ students, filters }: StudentsProps) {
+    const { hasRoles, can } = useAuthorization();
+
+    const [search, setSearch] = useState(filters.search ?? '');
+    const [perPage, setPerPage] = useState(filters.per_page ?? 10);
+
+    const fetchStudents = (
+        page = 1,
+        per_page = perPage,
+        searchText = search,
+    ) => {
+        router.get(
+            '/students',
+            { page, per_page, search },
+            { preserveState: true, replace: true },
+        );
+    };
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            fetchStudents(1);
+        }, 400);
+
+        return () => clearTimeout(timeout);
+    }, [search]);
+
     const updateStatus = (id: number, status: string) => {
         router.put(
             `/students/${id}/status`,
@@ -55,41 +80,19 @@ export default function Students({ students }: StudentsProps) {
                 onError: () => toast.error('Update failed'),
             },
         );
-        console.log(status);
     };
-    const [filterText, setFilterText] = useState('');
 
-    const filteredUsers = students.filter(
-        (student) =>
-            student.id.toString().includes(filterText) ||
-            (student.first_name &&
-                student.first_name
-                    .toLowerCase()
-                    .includes(filterText.toLowerCase())) ||
-            (student.last_name &&
-                student.last_name
-                    .toLowerCase()
-                    .includes(filterText.toLowerCase())),
-    );
     const downloadIdCard = (id: number) => {
         window.open(`/students/idcard/${id}`, '_blank');
     };
 
-    const handleDelete = (studentId: number) => {
-        router.delete(`students/${studentId}`, {
-            onSuccess: (data) => {
-                console.log(data);
-            },
-            onFinish: () => {
-                console.log('Fininshed!');
-            },
-            onError: (errors) => {
-                console.log(errors);
-            },
+    const handleDelete = (id: number) => {
+        router.delete(`/students/${id}`, {
+            onSuccess: () => toast.success('Student deleted'),
         });
     };
+
     const columns: TableColumn<Student>[] = [
-        // { name: 'ID', selector: row => row.id, sortable: true },
         {
             name: 'Name',
             cell: (row) => `${row.first_name} ${row.last_name}`,
@@ -101,56 +104,39 @@ export default function Students({ students }: StudentsProps) {
                 <span
                     onClick={() => {
                         navigator.clipboard.writeText(row.admission_no);
-                        toast.success('Admission Number Copied!');
+                        toast.success('Copied!');
                     }}
                     className="cursor-pointer text-blue-600 hover:underline"
                 >
                     {row.admission_no}
                 </span>
             ),
-            sortable: true,
-            width: '150px',
         },
         {
-            name: 'Guardian Contact',
-            cell: (row) => row.guardian_phone,
-            sortable: false,
-        },
-
-        {
-            name: 'Class Level',
-            // center:true,
+            name: 'Class',
             cell: (row) => (
-                <span
-                    className={'rounded-md bg-blue-500 p-2 text-xs text-white'}
-                >
+                <span className="rounded bg-blue-500 px-2 py-1 text-xs text-white">
                     CLASS {row.student_class?.name}
                 </span>
             ),
-            sortable: true,
         },
         {
             name: 'Section',
-            // center:true,
             cell: (row) => (
-                <span
-                    className={'rounded-md bg-pink-500 p-2 text-xs text-white'}
-                >
+                <span className="rounded bg-pink-500 px-2 py-1 text-xs text-white">
                     {row.section?.name}
                 </span>
             ),
-            sortable: true,
         },
         {
-            name: 'Admission Status',
-            width: '150px',
+            name: 'Status',
             cell: (row) => (
                 <Select
                     value={row.status}
                     onValueChange={(value) => updateStatus(row.id, value)}
                 >
                     <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="pending">Pending</SelectItem>
@@ -161,173 +147,125 @@ export default function Students({ students }: StudentsProps) {
             ),
         },
         {
-            name: 'Student Image',
-            cell: (row) => (
-                <div className="h-20 w-20 overflow-hidden rounded-md">
+            name: 'Image',
+            cell: (row) =>
+                row.photo_url ? (
                     <img
-                        src={`${row.photo_url}`}
-                        className="h-full w-full object-cover"
+                        src={row.photo_url}
+                        className="h-16 w-16 rounded object-cover"
                         alt="Student"
                     />
-                </div>
-            ),
+                ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded bg-gray-200 text-xs text-gray-500">
+                        N/A
+                    </div>
+                ),
         },
-
         {
             name: 'Action',
-
             cell: (row) => (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className={`cursor-pointer ${hasRoles(['admin', 'super admin']) ? '' : 'bg-red-400'}`}
-                        >
-                            {hasRoles(['admin', 'super admin'])
-                                ? 'Action'
-                                : 'Not allowed'}
-                        </Button>
+                        <Button variant="outline">Action</Button>
                     </DropdownMenuTrigger>
+
                     {hasRoles(['admin', 'super admin']) && (
-                        <DropdownMenuContent className="" align="start">
+                        <DropdownMenuContent>
                             <DropdownMenuGroup>
-                                <DropdownMenuItem className="cursor-pointer">
+                                <DropdownMenuItem>
                                     <Link
                                         href={`/students/${row.id}/edit`}
-                                        className="flex w-full items-center rounded-md bg-green-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-green-600"
+                                        className="flex items-center gap-2"
                                     >
-                                        Edit
-                                        <DropdownMenuShortcut>
-                                            <Edit className="text-white" />
-                                        </DropdownMenuShortcut>
+                                        <Edit size={16} /> Edit
                                     </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer">
-                                    <Button
-                                        onClick={() => downloadIdCard(row.id)}
-                                        className="flex w-full items-center rounded-md bg-yellow-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-yellow-600"
-                                    >
-                                        Download ID Card
-                                        <DropdownMenuShortcut>
-                                            <NotebookTabs className="text-white" />
-                                        </DropdownMenuShortcut>
-                                    </Button>
+
+                                <DropdownMenuItem
+                                    onClick={() => downloadIdCard(row.id)}
+                                >
+                                    <NotebookTabs size={16} /> ID Card
                                 </DropdownMenuItem>
 
-                                <DropdownMenuItem className="cursor-pointer">
-                                    <Button
-                                        onClick={() => handleDelete(row.id)}
-                                        className="flex w-full items-center rounded-md bg-red-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-red-600"
-                                    >
-                                        Delete
-                                        <DropdownMenuShortcut>
-                                            <Trash className="text-white" />
-                                        </DropdownMenuShortcut>
-                                    </Button>
+                                <DropdownMenuItem
+                                    onClick={() => handleDelete(row.id)}
+                                    className="text-red-600"
+                                >
+                                    <Trash size={16} /> Delete
                                 </DropdownMenuItem>
                             </DropdownMenuGroup>
                         </DropdownMenuContent>
                     )}
                 </DropdownMenu>
             ),
-
-            sortable: false,
         },
     ];
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Students', href: '/students' }]}>
-            <div className="p-8">
-                <h1 className="mb-4 text-2xl font-bold">Students</h1>
-                <div className="mb-4 flex items-center justify-between gap-4">
-                    {can('student.create') && (
-                        <Link
-                            href={`/students/create/`}
-                            className="cursor-pointer rounded-md bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 disabled:opacity-50"
-                        >
-                            Admit Student
-                        </Link>
-                    )}
+            <div className="p-6">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <h1 className="text-2xl font-bold">Students</h1>
 
-                    <div className="flex items-center">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <input
+                            type="text"
+                            placeholder="Search by name / admission no"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="rounded border border-gray-300 px-3 py-1"
+                        />
+
                         <Button
                             onClick={() => {
                                 const url = route('students.export.excel', {
-                                    search: filterText,
-                                    page: currentPage,
+                                    search,
                                     per_page: perPage,
                                 });
                                 window.open(url, '_blank');
                             }}
-                            className="me-2 bg-green-600 text-white hover:bg-green-700"
+                            className="bg-green-600 text-white hover:bg-green-700"
                         >
                             Export Excel
                         </Button>
+
                         <Button
                             onClick={() => {
                                 const url = route('students.export.pdf', {
-                                    search: filterText,
-                                    page: currentPage,
+                                    search,
                                     per_page: perPage,
                                 });
                                 window.open(url, '_blank');
                             }}
-                            className="me-2 bg-red-600 text-white hover:bg-red-700"
+                            className="bg-red-600 text-white hover:bg-red-700"
                         >
                             Export PDF
                         </Button>
 
                         <Link
-                            href={`/trashed-students`}
-                            className="me-2 cursor-pointer rounded-md bg-yellow-600 px-3 py-1 text-white hover:bg-yellow-700 disabled:opacity-50"
+                            href="/trashed-students"
+                            className="rounded bg-yellow-600 px-3 py-2 text-sm text-white hover:bg-yellow-700"
                         >
-                            View trashed students
+                            Trashed Students
                         </Link>
-
-                        <input
-                            type="text"
-                            placeholder="Search by ID, name, or email"
-                            value={filterText}
-                            onChange={(e) => setFilterText(e.target.value)}
-                            className="rounded border border-gray-300 px-3 py-1"
-                        />
                     </div>
                 </div>
 
                 <DataTable
                     columns={columns}
-                    data={filteredUsers}
+                    data={students.data}
                     pagination
-                    // selectableRows
-                    highlightOnHover
-                    pointerOnHover
-                    paginationServer={false}
-                    paginationPerPage={perPage}
-                    onChangePage={(page) => setCurrentPage(page)}
+                    paginationServer
+                    paginationTotalRows={students.total}
+                    paginationPerPage={students.per_page}
+                    paginationDefaultPage={students.current_page}
+                    onChangePage={(page) => fetchStudents(page)}
                     onChangeRowsPerPage={(newPerPage, page) => {
                         setPerPage(newPerPage);
-                        setCurrentPage(page);
+                        fetchStudents(page, newPerPage);
                     }}
-                    customStyles={{
-                        rows: {
-                            style: {
-                                minHeight: '100px',
-                            },
-                        },
-                        header: {
-                            style: {
-                                borderTopLeftRadius: '10px',
-                                borderTopRightRadius: '10px',
-                            },
-                        },
-                        pagination: {
-                            style: {
-                                borderBottomLeftRadius: '10px',
-                                borderBottomRightRadius: '10px',
-                                overflow: 'hidden',
-                            },
-                        },
-                    }}
+                    highlightOnHover
+                    pointerOnHover
                 />
             </div>
         </AppLayout>
