@@ -30,6 +30,7 @@ interface StudentDetails {
     guardian_phone: string;
     status: string;
     photo: string | null;
+    photo_url: string | null;
     student_class: { name: string } | null;
     sections: {
         id: number;
@@ -53,6 +54,7 @@ interface Props {
     stdntClass: StudentClass;
 }
 export default function ClassWiseStudents({ students, stdntClass }: Props) {
+    console.log(students);
     const baseURL = import.meta.env.VITE_APP_URL;
     const [filterText, setFilterText] = useState('');
     const updateStatus = (id: number, status: string) => {
@@ -155,7 +157,7 @@ export default function ClassWiseStudents({ students, stdntClass }: Props) {
             cell: (row) => (
                 <div className="h-20 w-20 overflow-hidden rounded-md">
                     <img
-                        src={`${baseURL}/storage/${row.photo ?? ''}`}
+                        src={`${row.photo_url ?? ''}`}
                         className="h-full w-full object-cover"
                         alt="Student"
                     />

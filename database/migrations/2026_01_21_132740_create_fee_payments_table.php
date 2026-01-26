@@ -12,16 +12,25 @@ return new class extends Migration {
     {
         Schema::create('fee_payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('invoice_id')->constrained('fee_invoices')->cascadeOnDelete();
-            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+
+            $table->string('transaction_id')->unique();
+
+            $table->foreignId('student_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
             $table->decimal('amount_paid', 10, 2);
-            $table->foreignId('payment_method_id')->constrained()->cascadeOnDelete();
+
             $table->date('payment_date');
-            $table->foreignId('received_by')->constrained('users');
+            $table->enum('status', ['partial', 'full'])->default('partial');
+
+            $table->foreignId('received_by')
+                ->constrained('users');
+
             $table->text('remarks')->nullable();
             $table->timestamps();
-
         });
+
     }
 
     /**

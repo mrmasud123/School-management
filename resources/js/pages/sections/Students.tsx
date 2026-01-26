@@ -22,28 +22,37 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import { useAuthorization } from '@/hooks/use-authorization';
-import { Edit, NotebookTabs } from 'lucide-react';
+import { DownloadIcon, Edit, NotebookTabs } from 'lucide-react';
 import toast from 'react-hot-toast';
+interface Teacher {
+    id: number;
+    first_name: string;
+    last_name: string;
+    photo_url?: string | null;
+}
+
+interface TeacherAssignment {
+    teacher: Teacher;
+}
+
+interface Subject {
+    id: number;
+    name: string;
+    created_at: string;
+    pivot: {
+        section_id: number;
+        subject_id: number;
+    };
+    teacher_assignments: TeacherAssignment | null;
+}
+
 interface Section {
     id: number;
+    class_id: number;
     name: string;
-    capacity: number;
-    students_count: number;
+    subjects: Subject[];
 }
 
-interface AssignedSubject {
-    id: number;
-    name: string;
-    pivot: {
-        created_at: string;
-    };
-}
-
-interface SectionSubjects {
-    id: number;
-    name: string;
-    subjects: AssignedSubject[];
-}
 interface Student {
     id: number;
     first_name: string;
@@ -51,62 +60,19 @@ interface Student {
     admission_no: string;
     email: string;
     guardian_phone: string;
-    student_class?: {
-        name: string;
-    };
-    section?: {
-        name: string;
-    };
     status: 'pending' | 'approved' | 'rejected';
-    photo?: string;
+    photo?: string | null;
+    student_class?: { name: string };
+    section?: { name: string };
 }
-interface Teacher {
-    id: number;
-    first_name: string;
-    last_name: string;
-    photo_url?: string;
-}
-interface TeacherAssignment {
-    id: number;
-    class_id: number;
-    section_id: number;
-    subject_id: number;
-    teacher_id: number;
-    created_at: string;
-    updated_at: string;
-    teacher: Teacher;
-}
-interface Subject {
+interface SectionSubjects {
     id: number;
     name: string;
-    status: number;
-    created_at: string;
-    updated_at: string;
-    deleted_at: string | null;
-    pivot: {
-        section_id: number;
-        subject_id: number;
-        created_at: string;
-        updated_at: string;
-    };
-    teacher_assignments: TeacherAssignment | null;
-}
-interface Section {
-    id: number;
-    class_id: number;
-    name: string;
-    capacity: string;
-    created_at: string;
-    updated_at: string;
-    deleted_at: string | null;
-    subjects: Subject[];
 }
 interface StudentsProps {
     students: Student[];
     section: Section;
-    subjects: Subject[];
 }
-
 export default function Students({ students, section }: StudentsProps) {
     const { can, canAny, hasRoles } = useAuthorization();
     console.log(section);
@@ -236,27 +202,18 @@ export default function Students({ students, section }: StudentsProps) {
                         <DropdownMenuContent className="" align="start">
                             <DropdownMenuGroup>
                                 <DropdownMenuItem className="cursor-pointer">
+                                            <Edit className="text-white" />
                                     <Link
                                         href={`/students/${row.id}/edit`}
-                                        className="flex w-full items-center rounded-md bg-green-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-green-600"
+                                        className="flex items-center gap-2"
                                     >
                                         Edit
-                                        <DropdownMenuShortcut>
-                                            <Edit className="text-white" />
-                                        </DropdownMenuShortcut>
                                     </Link>
                                 </DropdownMenuItem>
 
-                                <DropdownMenuItem className="cursor-pointer">
-                                    <Button
-                                        className="w-full cursor-pointer rounded-md bg-blue-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-blue-600"
-                                        onClick={() => downloadIdCard(row.id)}
-                                    >
-                                        Download ID Card
-                                        <DropdownMenuShortcut>
-                                            <NotebookTabs className="text-white" />
-                                        </DropdownMenuShortcut>
-                                    </Button>
+                                <DropdownMenuItem onClick={() => downloadIdCard(row.id)} className="cursor-pointer">
+                                            <DownloadIcon className="text-white" />ID Card
+
                                 </DropdownMenuItem>
                             </DropdownMenuGroup>
                         </DropdownMenuContent>
@@ -330,102 +287,108 @@ export default function Students({ students, section }: StudentsProps) {
                 ) : (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                         {section.subjects?.map((subject) => {
-                            const isAssigned =
-                                subject?.teacher_assignments ?? null;
+                            const isAssigned = !!subject.teacher_assignments;
+
                             return (
                                 <div
                                     key={subject.id}
-                                    className={`flex items-start justify-between rounded-lg border p-4 shadow-sm ${isAssigned ? 'bg-white' : 'border-red-400 bg-red-50'} `}
+                                    className={`flex h-full flex-col rounded-lg border p-4 shadow-sm transition ${isAssigned ? 'bg-white' : 'border-red-400 bg-red-50'}`}
                                 >
-                                    <div>
-                                        <h3 className="font-semibold">
-                                            {subject.name}
-                                        </h3>
-                                        <p
-                                            className={`mt-1 text-sm ${isAssigned ? 'text-gray-600' : 'font-medium text-red-600'}`}
-                                        >
-                                            Teacher:{' '}
-                                            {isAssigned
-                                                ? `${subject?.teacher_assignments?.teacher?.first_name} ${subject?.teacher_assignments?.teacher?.last_name}`
-                                                : 'Not Assigned'}
-                                        </p>
+                                    {/* Header */}
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <h3 className="font-semibold text-gray-900">
+                                                {subject.name}
+                                            </h3>
 
-                                        <p className="mt-2 text-xs text-gray-500">
-                                            Assigned on{' '}
-                                            {new Date(
-                                                subject.created_at,
-                                            ).toLocaleDateString()}
-                                        </p>
+                                            <p
+                                                className={`mt-1 text-sm ${
+                                                    isAssigned
+                                                        ? 'text-gray-600'
+                                                        : 'font-medium text-red-600'
+                                                }`}
+                                            >
+                                                Teacher:{' '}
+                                                {isAssigned
+                                                    ? `${subject.teacher_assignments!.teacher?.first_name}
+                                   ${subject.teacher_assignments!.teacher?.last_name}`
+                                                    : 'Not Assigned'}
+                                            </p>
+                                        </div>
 
-                                        <div className="mt-4 flex items-center justify-between">
-                                            {/* LEFT SIDE — Remove Subject */}
+                                        {/* Teacher Avatar */}
+                                        <img
+                                            className="h-12 w-12 shrink-0 rounded-full border object-cover"
+                                            src={
+                                                subject.teacher_assignments
+                                                    ?.teacher?.photo_url ??
+                                                '/images/avatar.png'
+                                            }
+                                            alt="Teacher"
+                                        />
+                                    </div>
 
-                                            {/* RIGHT SIDE — Remove Mapping */}
-                                            {can('subject.remove-mapping') && (
+                                    {/* Meta */}
+                                    <p className="mt-2 text-xs text-gray-500">
+                                        Assigned on{' '}
+                                        {new Date(
+                                            subject.created_at,
+                                        ).toLocaleDateString()}
+                                    </p>
+
+                                    {/* Actions */}
+                                    <div className="mt-auto flex flex-wrap gap-2 pt-4">
+                                        {can('subject.remove-mapping') && (
+                                            <Button
+                                                type="button"
+                                                disabled={removing}
+                                                onClick={() =>
+                                                    handleRemoveSubject(
+                                                        subject.pivot
+                                                            .section_id,
+                                                        subject.pivot
+                                                            .subject_id,
+                                                    )
+                                                }
+                                                className="bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700"
+                                            >
+                                                {removing ? (
+                                                    <>
+                                                        <Spinner className="mr-1 h-3 w-3" />
+                                                        Removing
+                                                    </>
+                                                ) : (
+                                                    'Remove Subject'
+                                                )}
+                                            </Button>
+                                        )}
+
+                                        {can('subject.remove-mapping') &&
+                                            subject.teacher_assignments && (
                                                 <Button
                                                     type="button"
                                                     disabled={removing}
-                                                    className="rounded-md bg-red-600 px-4 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
                                                     onClick={() =>
-                                                        handleRemoveSubject(
+                                                        removeSubject(
+                                                            section.class_id,
                                                             subject.pivot
                                                                 .section_id,
                                                             subject.pivot
                                                                 .subject_id,
-                                                        )
-                                                    }
-                                                >
-                                                    {removing ? (
-                                                        <>
-                                                            <Spinner />
-                                                            Removing...
-                                                        </>
-                                                    ) : (
-                                                        'Remove Subject'
-                                                    )}
-                                                </Button>
-                                            )}
-                                            {can('subject.remove-mapping') &&
-                                                subject.teacher_assignments && (
-                                                    <Button
-                                                        type="button"
-                                                        disabled={removing}
-                                                        className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                                                        onClick={() =>
-                                                            removeSubject(
-                                                                section.class_id,
-                                                                subject.pivot
-                                                                    .section_id,
-                                                                subject.pivot
-                                                                    .subject_id,
+                                                            Number(
                                                                 subject
-                                                                    ?.teacher_assignments
+                                                                    .teacher_assignments
                                                                     ?.teacher
                                                                     ?.id,
-                                                            )
-                                                        }
-                                                    >
-                                                        {removing ? (
-                                                            <>
-                                                                <Spinner />
-                                                                Removing...
-                                                            </>
-                                                        ) : (
-                                                            'Remove Mapping'
-                                                        )}
-                                                    </Button>
-                                                )}
-                                        </div>
+                                                            ),
+                                                        )
+                                                    }
+                                                    className="bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
+                                                >
+                                                    Remove Mapping
+                                                </Button>
+                                            )}
                                     </div>
-
-                                    <img
-                                        className="h-15 w-15 rounded-full object-cover"
-                                        src={
-                                            subject?.teacher_assignments
-                                                ?.teacher?.photo_url
-                                        }
-                                        alt="Teacher Image"
-                                    />
                                 </div>
                             );
                         })}

@@ -7,6 +7,14 @@ import { Edit, NotebookTabs, Trash } from 'lucide-react';
 import { useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import Swal from 'sweetalert2';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 interface Role {
     id: number;
     name: string;
@@ -153,41 +161,44 @@ export default function Roles() {
 
         {
             name: 'Actions',
-            width: '350px',
+            // width: '350px',
             cell: (row) => (
-                <div className={`flex items-center gap-2`}>
-                    {hasRoles(['admin', 'super admin']) ? (
-                        <>
-                            <Link
-                                href={`/add-permission/${row.id}`}
-                                className="inline-flex items-center gap-1 rounded-md bg-pink-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-pink-700"
-                            >
-                                <NotebookTabs size={14} />
-                                Permissions
-                            </Link>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline">Action</Button>
+                    </DropdownMenuTrigger>
 
-                            <button
-                                onClick={() => handleEdit(row)}
-                                className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
-                            >
-                                <Edit size={14} />
-                                Edit
-                            </button>
+                    {hasRoles(['admin', 'super admin']) && (
+                        <DropdownMenuContent>
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem>
+                                    <Link
+                                        href={`/add-permission/${row.id}`}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <NotebookTabs size={14} />Permissions
+                                    </Link>
+                                </DropdownMenuItem>
 
-                            <button
-                                onClick={() => handleDelete(row.id)}
-                                className="inline-flex items-center gap-1 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700"
-                            >
-                                <Trash size={14} />
-                                Delete
-                            </button>
-                        </>
-                    ) : (   
-                        <span className="rounded-md bg-red-500 px-3 py-1 text-sm text-white">
-                            Not action allowed
-                        </span>
+                                <DropdownMenuItem
+                                    onClick={() => handleEdit(row)}
+                                >
+                                    <Edit size={16} /> Edit
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                    onClick={() => handleDelete(row.id)}
+                                    className="text-red-600"
+                                >
+                                    <Trash size={16} /> Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                        </DropdownMenuContent>
                     )}
-                </div>
+                </DropdownMenu>
+                        /*<span className="rounded-md bg-red-500 px-3 py-1 text-sm text-white">
+                            Not action allowed
+                        </span>*/
             ),
         },
     ];

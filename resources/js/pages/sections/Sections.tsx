@@ -86,26 +86,23 @@ export default function Sections({ sections }: SectionsProps) {
                         <DropdownMenuGroup>
                             {can('section.edit') && (
                                 <DropdownMenuItem className="cursor-pointer">
+
+                                    <Edit className="text-white" />
                                     <Link
                                         href={`/sections/${row.id}/edit`}
-                                        className="flex w-full items-center rounded-md bg-green-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-green-600"
+                                        className="flex items-center gap-2"
                                     >
                                         Edit
-                                        <DropdownMenuShortcut>
-                                            <Edit className="text-white" />
-                                        </DropdownMenuShortcut>
                                     </Link>
                                 </DropdownMenuItem>
                             )}
                             <DropdownMenuItem className="cursor-pointer">
+                                        <NotebookTabs className="text-white" />
                                 <Link
                                     href={`/sections/section-wise-students/${row.id}`}
-                                    className="flex w-full items-center rounded-md bg-yellow-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-yellow-600"
+                                    className="flex items-center gap-2"
                                 >
                                     View Section
-                                    <DropdownMenuShortcut>
-                                        <NotebookTabs className="text-white" />
-                                    </DropdownMenuShortcut>
                                 </Link>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>

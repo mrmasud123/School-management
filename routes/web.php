@@ -28,6 +28,9 @@ Route::get('/', function () {
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/test', function(){
+        return "Testing";
+    });
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
@@ -41,6 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/students/{student}/status', [StudentController::class, 'updateStatus'])->name('students.update.status');
     Route::get('/students/export/excel', [StudentController::class, 'export'])->name('students.export.excel');
     Route::get('/students/export/pdf', [StudentController::class, 'exportPdf'])->name('students.export.pdf');
+    Route::get('/students/generate-payment-history/{studentId}', [AccountsController::class, 'generatePaymentHistory'])->name('students.export.payment.history');
     Route::resource('/students', StudentController::class)->names('admin.students');
 
     Route::get('/trashed-students', [StudentController::class, 'trashed'])->name('trashed.students');
@@ -94,6 +98,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/student-all-details/{studentId}', [StudentDetailsController::class, 'studentAllDetails'])->name('student.all.details');
 
     Route::get('/accountants', [AccountsController::class, 'index'])->name('admin.accountants');
+    Route::get('/accountants/collect-fee', [AccountsController::class, 'collectFee'])->name('admin.accountants.collect-fee');
+    Route::get('/accountants/fetch-student-fee-details/{admissionId}', [AccountsController::class, 'fetchStudentFeeDetails'])->name('admin.accountants.fetch-student-fee-details');
+    Route::post('/accountants/store-collect-fee', [AccountsController::class, 'storeCollectFee'])->name('admin.accountants.store-collect-fee');
+
+
+
+    Route::get('/accountants/add-expense', [AccountsController::class, 'addExpense'])->name('admin.accountants.add-expense');
+    Route::get('/accountants/fee-structure', [AccountsController::class, 'feeStructure'])->name('admin.accountants.fee-structure');
+    Route::post('/accountants/store-fee-structure', [AccountsController::class, 'storeFeeStructure'])->name('admin.accountants.store-fee-structure');
+    Route::get('/accountants/fetch-fee-structure', [AccountsController::class, 'fetchFeeStructure'])->name('admin.fetch.fee.structure');
+
+
+    Route::get('/accountants/fee-category', [AccountsController::class, 'FeeCategory'])->name('admin.accountants.fee-category');
+    Route::post('/accountants/store-fee-category', [AccountsController::class, 'storeFeeCategory'])->name('admin.accountants.store-fee-category');
+
+    Route::get('/accountants/academic-year', [AccountsController::class, 'academicYear'])->name('admin.accountants.academic-year');
+    Route::post('/accountants/store-academic-year', [AccountsController::class, 'storeAcademicYear'])->name('admin.accountants.store-academic-year');
+
+
+
+
+
     Route::get('/parent-complaints', [\App\Http\Controllers\Admin\ParentComplaintsController::class, 'index'])->name('admin.parent.complaints');
     Route::get('/classes-sections', [\App\Http\Controllers\Admin\ClassesSectionsController::class, 'index'])->name('admin.classes.sections');
 

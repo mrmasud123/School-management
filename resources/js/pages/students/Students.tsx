@@ -266,6 +266,23 @@ export default function Students({ students, filters }: StudentsProps) {
                     }}
                     highlightOnHover
                     pointerOnHover
+                    customStyles={{
+                        table: {
+                            style: {
+                                borderTopRightRadius: '10px',
+                                borderTopLeftRadius: '10px',
+                                overflow: 'hidden',
+                            },
+                        },
+                        rows: { style: { minHeight: '100px' } },
+                        pagination: {
+                            style: {
+                                borderBottomLeftRadius: '10px',
+                                borderBottomRightRadius: '10px',
+                                overflow: 'hidden',
+                            },
+                        },
+                    }}
                 />
             </div>
         </AppLayout>

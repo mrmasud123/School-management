@@ -3,11 +3,19 @@ import DataTable, { TableColumn } from 'react-data-table-component';
 import AppLayout from '@/layouts/app-layout';
 import { Link, router } from '@inertiajs/react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import { useAuthorization } from '@/hooks/use-authorization';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { Edit, NotebookTabs, Trash } from 'lucide-react';
 
 export default function Trashed({students}) {
-    console.log(students);
+    const { hasRoles, can } = useAuthorization();
     const baseURL= import.meta.env.VITE_APP_URL;
     const [filterText, setFilterText] = useState('');
 
@@ -109,21 +117,32 @@ export default function Trashed({students}) {
             name: 'Action',
 
             cell: row => (
-                <div className="flex gap-2">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline">Action</Button>
+                    </DropdownMenuTrigger>
 
-                    <button
-                        onClick={()=> handleRestore(row.id)}
-                        className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors duration-200"
-                    >
-                        Restore
-                    </button>
-                    <button
-                        onClick={()=> handleForceDelete(row.id)}
-                        className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-200"
-                    >
-                        Delete
-                    </button>
-                </div>
+                    {hasRoles(['admin', 'super admin']) && (
+                        <DropdownMenuContent>
+                            <DropdownMenuGroup>
+
+
+                                <DropdownMenuItem
+                                    onClick={()=> handleRestore(row.id)}
+                                >
+                                    <NotebookTabs size={16} /> Restore
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                    onClick={()=> handleForceDelete(row.id)}
+                                    className="text-red-600"
+                                >
+                                    <Trash size={16} /> Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                    )}
+                </DropdownMenu>
             ),
             sortable: false,
             width:"250px",

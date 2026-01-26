@@ -11,7 +11,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { Link, router } from '@inertiajs/react';
 import { Edit, Trash } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 
 interface Teacher {
@@ -33,26 +33,42 @@ interface Teacher {
     document_url: string;
 }
 interface TeacherProps {
-    teachers: Teacher[];
+    teachers: {
+        data: Teacher[];
+        total: number;
+        per_page: number;
+        current_page: number;
+    };
+    filters: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
-export default function Teacher({ teachers }: TeacherProps) {
+export default function Teacher({ teachers, filters }: TeacherProps) {
     const { can, canAny, hasRoles } = useAuthorization();
 
-    const [filterText, setFilterText] = useState('');
+    const [search, setSearch] = useState(filters.search ?? '');
+    const [perPage, setPerPage] = useState(filters.per_page ?? 4);
     const [selectTeachers, setSelectTeachers] = useState<Teacher[]>([]);
-    const filteredUsers = teachers.filter(
-        (teacher) =>
-            teacher.id.toString().includes(filterText) ||
-            (teacher.first_name &&
-                teacher.first_name
-                    .toLowerCase()
-                    .includes(filterText.toLowerCase())) ||
-            (teacher.last_name &&
-                teacher.last_name
-                    .toLowerCase()
-                    .includes(filterText.toLowerCase())),
-    );
+
+    const fetchTeachers = (page = 1, per_page = perPage, searchText = search) =>
+        router.get(
+            '/teachers',
+            { page, per_page, search },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            fetchTeachers(1);
+        }, 400);
+
+        return () => clearTimeout(timeout);
+    }, [search, perPage]);
 
     const handleSelect = (selectedTeachers: Teacher) => {
         setSelectTeachers((prev) => [...prev, selectedTeachers]);
@@ -137,24 +153,16 @@ export default function Teacher({ teachers }: TeacherProps) {
                                 <DropdownMenuItem className="cursor-pointer">
                                     <Link
                                         href={`/teachers/${row.id}/edit`}
-                                        className="flex w-full items-center rounded-md bg-green-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-green-600"
+                                        className="flex items-center gap-2"
                                     >
-                                        Edit
-                                        <DropdownMenuShortcut>
                                             <Edit className="text-white" />
-                                        </DropdownMenuShortcut>
+                                        Edit
                                     </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer">
-                                    <Button
-                                        onClick={() => handleDelete(row.id)}
-                                        className="flex w-full items-center rounded-md bg-red-500 px-3 py-2 text-white transition-colors duration-200 hover:bg-red-600"
-                                    >
-                                        Delete
-                                        <DropdownMenuShortcut>
+                                <DropdownMenuItem onClick={() => handleDelete(row.id)} className="cursor-pointer">
+
                                             <Trash className="text-white" />
-                                        </DropdownMenuShortcut>
-                                    </Button>
+                                        Delete
                                 </DropdownMenuItem>
                             </DropdownMenuGroup>
                         </DropdownMenuContent>
@@ -191,36 +199,36 @@ export default function Teacher({ teachers }: TeacherProps) {
 
                     <input
                         type="text"
-                        placeholder="Search by ID, name, or email"
-                        value={filterText}
-                        onChange={(e) => setFilterText(e.target.value)}
-                        className="rounded border border-gray-300 p-2"
+                        placeholder="Search by name / admission no"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="rounded border border-gray-300 px-3 py-1"
                     />
                 </div>
 
                 <DataTable
-                    title="Teacher List"
+                    title="All Teachers"
                     columns={columns}
-                    data={filteredUsers}
+                    data={teachers.data}
                     pagination
-                    selectableRows
-                    highlightOnHover
-                    pointerOnHover
-                    onSelectedRowsChange={(state) =>
-                        handleSelect(state.selectedRows[0])
-                    }
+                    paginationServer
+                    paginationTotalRows={teachers.total}
+                    paginationPerPage={teachers.per_page}
+                    paginationDefaultPage={teachers.current_page}
+                    onChangePage={(page) => fetchTeachers(page)}
+                    onChangeRowsPerPage={(newPerPage, page) => {
+                        setPerPage(newPerPage);
+                        fetchTeachers(page, newPerPage);
+                    }}
                     customStyles={{
-                        rows: {
+                        table: {
                             style: {
-                                minHeight: '100px',
-                            },
-                        },
-                        header: {
-                            style: {
-                                borderTopLeftRadius: '10px',
                                 borderTopRightRadius: '10px',
+                                borderTopLeftRadius: '10px',
+                                overflow: 'hidden',
                             },
                         },
+                        rows: { style: { minHeight: '100px' } },
                         pagination: {
                             style: {
                                 borderBottomLeftRadius: '10px',

@@ -17,7 +17,6 @@ return new class extends Migration {
             $table->decimal('amount', 10, 2);
             $table->foreignId('academic_year_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
-
         });
     }
 

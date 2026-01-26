@@ -12,3 +12,5 @@ class ManageAttendanceController extends Controller
         return Inertia::render('ManageAttendance');
     }
 }
+
+/**/

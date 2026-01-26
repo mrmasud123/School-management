@@ -12,7 +12,7 @@ class Student extends Model implements HasMedia
     use SoftDeletes;
     use InteractsWithMedia;
     protected $guarded = [];
-//    protected $with = ['media'];
+    //    protected $with = ['media'];
 
     protected $appends = ['photo_url'];
 
@@ -34,6 +34,20 @@ class Student extends Model implements HasMedia
             ->nonQueued();
     }
 
+    public function feeStructures()
+    {
+        return $this->hasMany(
+            FeeStructure::class,
+            'class_id',
+            'class_id'
+        );
+    }
+
+    public function studentFee()
+    {
+        return $this->hasMany(StudentFee::class, 'student_id', 'id');
+    }
+
     public function studentClass()
     {
         return $this->belongsTo(SchoolClass::class, 'class_id', 'id');
@@ -46,7 +60,7 @@ class Student extends Model implements HasMedia
 
     public function section()
     {
-        return $this->belongsTo(Section::class,'section_id' );
+        return $this->belongsTo(Section::class, 'section_id');
     }
 
 }

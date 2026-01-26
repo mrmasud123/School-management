@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTeacherRequest;
-use App\Models\Product;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,15 +22,35 @@ class TeachersController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $teachers = Cache::remember('teachers', 60 * 60, fn() => TeacherResource::collection(
-            Teacher::with(['designation', 'employmentType', 'qualification', 'contact', 'specializations', 'media'])->orderBy('id', 'desc')->get()
-        )->resolve());
+
+        $perPage = $request->get('per_page', 10);
+        $page = $request->get('page', 1);
+        $search = $request->get('search');
+
+        $cacheKey = "teachers:page={$page}:perPage={$perPage}:search={$search}";
+        $teachers = TeacherResource::collection(
+            Teacher::with([
+                'designation',
+                'employmentType',
+                'qualification',
+                'contact',
+                'specializations',
+                'media'
+            ])
+                ->orderByDesc('id')
+                ->paginate($perPage)
+        );
 
         return Inertia::render('teachers/Index', [
             'teachers' => $teachers,
+            'filters' => [
+                'search' => $search,
+                'per_page' => $perPage,
+            ],
         ]);
+
     }
 
     /**

@@ -14,10 +14,8 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('student_id')->constrained()->cascadeOnDelete();
             $table->foreignId('fee_structure_id')->constrained()->cascadeOnDelete();
-            $table->decimal('discount_amount', 10, 2)->default(0);
-            $table->decimal('final_amount', 10, 2);
-            $table->date('due_date');
-            $table->enum('status', ['pending', 'partial', 'paid'])->default('pending');
+            $table->decimal('amount', 10, 2);
+            $table->string("transaction_id");
             $table->timestamps();
         });
     }

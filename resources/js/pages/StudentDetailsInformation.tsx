@@ -1,126 +1,130 @@
-import AppLayout from "@/layouts/app-layout"
-import { Button } from "@/components/ui/button"
-import toast from "react-hot-toast"
-import React from "react"
-import axios from "axios"
-import {
-    Select,
-    SelectTrigger,
-    SelectContent,
-    SelectItem,
-    SelectValue,
-} from "@/components/ui/select"
-import { useForm } from "@inertiajs/react"
-import {
-    Popover,
-    PopoverTrigger,
-    PopoverContent,
-} from "@/components/ui/popover"
+import StudentDetails from '@/components/custom/StudentDetails';
+import { Button } from '@/components/ui/button';
 import {
     Command,
-    CommandInput,
     CommandEmpty,
     CommandGroup,
+    CommandInput,
     CommandItem,
-} from "@/components/ui/command"
-import { Check, ChevronsUpDown } from "lucide-react"
-import { cn } from "@/lib/utils"
-import StudentDetails from "@/components/custom/StudentDetails"
+} from '@/components/ui/command';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
+import { useForm } from '@inertiajs/react';
+import axios from 'axios';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import React from 'react';
+import toast from 'react-hot-toast';
 
 export default function StudentDetailsInformation({
     classes,
 }: {
-    classes: any
+    classes: any;
 }) {
     const form = useForm({
         student_id: 0,
         class_id: 0,
         section_id: 0,
-    })
-    
+    });
 
+    const [sections, setSections] = React.useState<any[]>([]);
+    const [students, setStudents] = React.useState<any[]>([]);
+    const [studentDetails, setStudentDetails] = React.useState<any[]>([]);
+    const [loadSection, setLoadSection] = React.useState(false);
+    const [loadStudent, setLoadStudent] = React.useState(false);
+    const [loading, setLoading] = React.useState(false);
 
-    const [sections, setSections] = React.useState<any[]>([])
-    const [students, setStudents] = React.useState<any[]>([])
-    const [studentDetails, setStudentDetails] = React.useState<any[]>([])
-    const [loadSection, setLoadSection] = React.useState(false)
-    const [loadStudent, setLoadStudent] = React.useState(false)
-    const [loading, setLoading] = React.useState(false)
-
-    const [studentOpen, setStudentOpen] = React.useState(false)
-    const [studentValue, setStudentValue] = React.useState<string>("")
+    const [studentOpen, setStudentOpen] = React.useState(false);
+    const [studentValue, setStudentValue] = React.useState<string>('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true)
+        setLoading(true);
         try {
-            const response = await axios.get('/student-all-details/' + form.data.student_id);
+            const response = await axios.get(
+                '/student-all-details/' + form.data.student_id,
+            );
             setStudentDetails(response.data.student);
-            console.log(response);
+            console.log(response.data.student);
         } catch (error) {
-            toast.error("Failed to fetch student details")
+            toast.error('Failed to fetch student details');
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     const handleClassChange = async (value: string) => {
-        form.setData("class_id", Number(value))
-        setLoadSection(true)
-        setSections([])
-        setStudents([])
-        setStudentValue("")
+        form.setData('class_id', Number(value));
+        setLoadSection(true);
+        setSections([]);
+        setStudents([]);
+        setStudentValue('');
 
         try {
             const response = await axios.get(
-                `/fetch-sections-student-admission/${value}`
-            )
-            setSections(response.data.sections)
+                `/fetch-sections-student-admission/${value}`,
+            );
+            setSections(response.data.sections);
         } catch {
-            toast.error("Failed to load sections")
+            toast.error('Failed to load sections');
         } finally {
-            setLoadSection(false)
+            setLoadSection(false);
         }
-    }
+    };
 
     const handleSectionChange = async (value: string) => {
-        form.setData("section_id", Number(value))
-        setLoadStudent(true)
-        setStudents([])
-        setStudentValue("")
+        form.setData('section_id', Number(value));
+        setLoadStudent(true);
+        setStudents([]);
+        setStudentValue('');
 
         try {
-            const response = await axios.get(`/fetch-students/${value}`)
-            setStudents(response.data.students)
+            const response = await axios.get(`/fetch-students/${value}`);
+            setStudents(response.data.students);
         } catch {
-            toast.error("Failed to load students")
+            toast.error('Failed to load students');
         } finally {
-            setLoadStudent(false)
+            setLoadStudent(false);
         }
-    }
+    };
 
     return (
         <AppLayout
             breadcrumbs={[
-                { title: "Student Details", href: "/student-details" },
+                { title: 'Student Details', href: '/student-details' },
             ]}
         >
             <div className="p-8">
-                <h1 className="text-2xl font-bold mb-4">Student Details</h1>
+                <h1 className="mb-4 text-2xl font-bold">Student Details</h1>
 
                 <form onSubmit={handleSubmit}>
-                    <section className="border rounded-lg p-6 bg-card space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
+                    <section className="space-y-6 rounded-lg border bg-card p-6">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <div>
-                                <label className="text-sm font-medium">Select Class</label>
+                                <label className="text-sm font-medium">
+                                    Select Class
+                                </label>
                                 <Select onValueChange={handleClassChange}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Choose class" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {classes.map((cls: any) => (
-                                            <SelectItem key={cls.id} value={`${cls.id}`}>
+                                            <SelectItem
+                                                key={cls.id}
+                                                value={`${cls.id}`}
+                                            >
                                                 Class {cls.name}
                                             </SelectItem>
                                         ))}
@@ -129,9 +133,13 @@ export default function StudentDetailsInformation({
                             </div>
 
                             <div>
-                                <label className="text-sm font-medium">Select Section</label>
+                                <label className="text-sm font-medium">
+                                    Select Section
+                                </label>
                                 <Select
-                                    disabled={loadSection || sections.length === 0}
+                                    disabled={
+                                        loadSection || sections.length === 0
+                                    }
                                     onValueChange={handleSectionChange}
                                 >
                                     <SelectTrigger>
@@ -139,7 +147,10 @@ export default function StudentDetailsInformation({
                                     </SelectTrigger>
                                     <SelectContent>
                                         {sections.map((sec: any) => (
-                                            <SelectItem key={sec.id} value={`${sec.id}`}>
+                                            <SelectItem
+                                                key={sec.id}
+                                                value={`${sec.id}`}
+                                            >
                                                 {sec.name}
                                             </SelectItem>
                                         ))}
@@ -148,7 +159,9 @@ export default function StudentDetailsInformation({
                             </div>
 
                             <div>
-                                <label className="text-sm font-medium">Select Student</label>
+                                <label className="text-sm font-medium">
+                                    Select Student
+                                </label>
 
                                 <Popover
                                     open={studentOpen}
@@ -159,18 +172,24 @@ export default function StudentDetailsInformation({
                                             variant="outline"
                                             role="combobox"
                                             className="w-full justify-between"
-                                            disabled={loadStudent || students.length === 0}
+                                            disabled={
+                                                loadStudent ||
+                                                students.length === 0
+                                            }
                                         >
                                             {studentValue
                                                 ? (() => {
-                                                    const student = students.find(
-                                                        s => s.id.toString() === studentValue
-                                                    );
-                                                    return student
-                                                        ? `${student.admission_no} - ${student.first_name} ${student.last_name}`
-                                                        : "Choose student"
-                                                })()
-                                                : "Choose student"}
+                                                      const student =
+                                                          students.find(
+                                                              (s) =>
+                                                                  s.id.toString() ===
+                                                                  studentValue,
+                                                          );
+                                                      return student
+                                                          ? `${student.admission_no} - ${student.first_name} ${student.last_name}`
+                                                          : 'Choose student';
+                                                  })()
+                                                : 'Choose student'}
 
                                             <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                                         </Button>
@@ -179,7 +198,9 @@ export default function StudentDetailsInformation({
                                     <PopoverContent className="w-full p-0">
                                         <Command>
                                             <CommandInput placeholder="Search student..." />
-                                            <CommandEmpty>No student found.</CommandEmpty>
+                                            <CommandEmpty>
+                                                No student found.
+                                            </CommandEmpty>
 
                                             <CommandGroup>
                                                 {students.map((sub: any) => (
@@ -187,20 +208,29 @@ export default function StudentDetailsInformation({
                                                         key={sub.id}
                                                         value={`${sub.id} ${sub.first_name} ${sub.last_name}`}
                                                         onSelect={() => {
-                                                            setStudentValue(sub.id.toString())
-                                                            form.setData("student_id", sub.id)
-                                                            setStudentOpen(false)
+                                                            setStudentValue(
+                                                                sub.id.toString(),
+                                                            );
+                                                            form.setData(
+                                                                'student_id',
+                                                                sub.id,
+                                                            );
+                                                            setStudentOpen(
+                                                                false,
+                                                            );
                                                         }}
                                                     >
                                                         <Check
                                                             className={cn(
-                                                                "mr-2 h-4 w-4",
-                                                                studentValue === sub.id.toString()
-                                                                    ? "opacity-100"
-                                                                    : "opacity-0"
+                                                                'mr-2 h-4 w-4',
+                                                                studentValue ===
+                                                                    sub.id.toString()
+                                                                    ? 'opacity-100'
+                                                                    : 'opacity-0',
                                                             )}
                                                         />
-                                                        {sub.admission_no} - {sub.first_name}{" "}
+                                                        {sub.admission_no} -{' '}
+                                                        {sub.first_name}{' '}
                                                         {sub.last_name}
                                                     </CommandItem>
                                                 ))}
@@ -214,21 +244,19 @@ export default function StudentDetailsInformation({
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                            className="dark:text-dark cursor-pointer hover:bg-blue-700 dark:bg-white"
                         >
-                            {loading ? "Loading..." : "Fetch Student Details"}
+                            {loading ? 'Loading...' : 'Fetch Student Details'}
                         </Button>
                     </section>
                 </form>
-                
-                {
-                    studentDetails && studentDetails.id ? (
-                        <div className="mt-8">
-                            <StudentDetails student={studentDetails} />
-                        </div>
-                    ) : null
-                }
+
+                {studentDetails && studentDetails.id ? (
+                    <div className="mt-8">
+                        <StudentDetails student={studentDetails} />
+                    </div>
+                ) : null}
             </div>
         </AppLayout>
-    )
+    );
 }

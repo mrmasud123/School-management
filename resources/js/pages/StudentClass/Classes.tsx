@@ -172,6 +172,7 @@ export default function Classes({ classes, filters }: ClassesProps) {
                 </div>
 
                 <DataTable
+                    title="All Classes"
                     columns={columns}
                     data={classes.data}
                     pagination

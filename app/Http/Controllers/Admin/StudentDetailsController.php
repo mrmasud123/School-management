@@ -18,7 +18,7 @@ class StudentDetailsController extends Controller
     {
         $subjects = Subject::all();
         $classes = SchoolClass::all();
-        return Inertia::render('StudentDetailsInformation',['subjects'=>$subjects,'classes'=>$classes]);
+        return Inertia::render('StudentDetailsInformation', ['subjects' => $subjects, 'classes' => $classes]);
     }
 
     public function generateIdCard($id)
@@ -44,7 +44,7 @@ class StudentDetailsController extends Controller
             'photoPath' => $photoPath,
         ]);
 
-        return $pdf->stream('id-card-'.$student->admission_no.'.pdf');
+        return $pdf->stream('id-card-' . $student->admission_no . '.pdf');
     }
 
 
@@ -57,13 +57,21 @@ class StudentDetailsController extends Controller
         return response()->json(['students' => $students]);
     }
 
-    public function studentAllDetails($studentId){
-        $student = Student::with('studentClass', 'section')->find($studentId);
+    public function studentAllDetails($studentId)
+    {
+        $student = Student::with([
+            'studentClass',
+            'section',
+            'studentFee.feeStructure.feeCategory',
+            'studentFee.feePayment'
+        ])->find($studentId);
+
         if (!$student) {
             return response()->json(['message' => 'Student not found'], 404);
         }
         return response()->json(['student' => $student]);
     }
+
 
 
 

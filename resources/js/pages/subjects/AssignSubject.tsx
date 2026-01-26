@@ -14,17 +14,25 @@ import axios from 'axios';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-interface Section {
+interface Teacher {
     id: number;
-    name: string;
-    capacity: number;
-    students_count: number;
+    first_name: string;
+    last_name: string;
+    photo_url: string | null;
+}
+
+interface TeacherAssignment {
+    teacher: Teacher;
 }
 
 interface AssignedSubject {
     id: number;
     name: string;
+    created_at: string;
+    teacher_assignments?: TeacherAssignment | null;
     pivot: {
+        section_id: number;
+        subject_id: number;
         created_at: string;
     };
 }
@@ -32,13 +40,10 @@ interface AssignedSubject {
 interface SectionSubjects {
     id: number;
     name: string;
+    class_id: number;
     subjects: AssignedSubject[];
 }
 
-interface Props {
-    subjects: { id: number; name: string }[];
-    classes: { id: number; name: string }[];
-}
 export default function AssignSubject({ subjects, classes }: Props) {
     const { can, canAny, hasRoles } = useAuthorization();
     const [loadSection, setLoadSection] = useState(false);
@@ -245,41 +250,6 @@ export default function AssignSubject({ subjects, classes }: Props) {
                             </div>
                         </div>
                         {sectionSubjects && (
-                            // <div className="pt-8">
-                            //     <h2 className="text-xl font-bold mb-4">
-                            //         Assigned Subjects —{" "}
-                            //         <span className="bg-green-500 text-white px-3 py-1 rounded-md">
-                            //             {sectionSubjects.name}
-                            //         </span>
-                            //     </h2>
-
-                            //     {sectionSubjects.subjects.length === 0 ? (
-                            //         <p className="text-gray-500">
-                            //             No subjects assigned to this section.
-                            //         </p>
-                            //     ) : (
-                            //         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            //             {sectionSubjects.subjects.map(subject => (
-                            //                 <div
-                            //                     key={subject.id}
-                            //                     className="border rounded-lg p-4 bg-white shadow-sm"
-                            //                 >
-                            //                     <h3 className="font-semibold">
-                            //                         {subject.name}
-                            //                     </h3>
-                            //                     <p className="text-xs text-gray-500 mt-2">
-                            //                         Assigned on{" "}
-                            //                         {new Date(
-                            //                             subject.pivot.created_at
-                            //                         ).toLocaleDateString()}
-                            //                     </p>
-                            //                     <Button type='button' onClick={() => handleRemoveSubject(form.data.section_id,subject.id)} className='text-xs mt-3 cursor-pointer'>Remove</Button>
-                            //                 </div>
-
-                            //             ))}
-                            //         </div>
-                            //     )}
-                            // </div>
                             <div className="p-8">
                                 <h1 className="mb-4 text-2xl font-bold">
                                     Assigned Subjects for Section{' '}
@@ -296,108 +266,123 @@ export default function AssignSubject({ subjects, classes }: Props) {
                                         {sectionSubjects.subjects?.map(
                                             (subject) => {
                                                 const isAssigned =
-                                                    subject?.teacher_assignments ??
-                                                    null;
+                                                    !!subject?.teacher_assignments;
+
                                                 return (
                                                     <div
                                                         key={subject.id}
-                                                        className={`flex items-start justify-between rounded-lg border p-4 shadow-sm ${isAssigned ? 'bg-white' : 'border-red-400 bg-red-50'} `}
+                                                        className={`flex h-full flex-col justify-between rounded-lg border p-4 shadow-sm ${isAssigned ? 'bg-white' : 'border-red-400 bg-red-50'}`}
                                                     >
-                                                        <div>
-                                                            <h3 className="font-semibold">
-                                                                {subject.name}
-                                                            </h3>
-                                                            <p
-                                                                className={`mt-1 text-sm ${isAssigned ? 'text-gray-600' : 'font-medium text-red-600'}`}
-                                                            >
-                                                                Teacher:{' '}
-                                                                {isAssigned
-                                                                    ? `${subject?.teacher_assignments?.teacher?.first_name} ${subject?.teacher_assignments?.teacher?.last_name}`
-                                                                    : 'Not Assigned'}
-                                                            </p>
-
-                                                            <p className="mt-2 text-xs text-gray-500">
-                                                                Assigned on{' '}
-                                                                {new Date(
-                                                                    subject.created_at,
-                                                                ).toLocaleDateString()}
-                                                            </p>
-
-                                                            <div className="mt-4 flex items-center justify-between">
-                                                                <Button
-                                                                    type="button"
-                                                                    disabled={
-                                                                        removing
+                                                        {/* Header */}
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div>
+                                                                <h3 className="font-semibold text-gray-900">
+                                                                    {
+                                                                        subject.name
                                                                     }
-                                                                    onClick={() =>
-                                                                        handleRemoveSubject(
-                                                                            form
-                                                                                .data
-                                                                                .section_id,
-                                                                            subject.id,
-                                                                        )
-                                                                    }
-                                                                    className="rounded-md bg-red-600 px-4 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                                                                </h3>
+
+                                                                <p
+                                                                    className={`mt-1 text-sm ${
+                                                                        isAssigned
+                                                                            ? 'text-gray-600'
+                                                                            : 'font-medium text-red-600'
+                                                                    }`}
                                                                 >
-                                                                    {removing ? (
-                                                                        <>
-                                                                            <Spinner />
-                                                                            Removing...
-                                                                        </>
-                                                                    ) : (
-                                                                        'Remove Subject'
-                                                                    )}
-                                                                </Button>
-
-                                                                {can(
-                                                                    'subject.remove-mapping',
-                                                                ) &&
-                                                                    subject.teacher_assignments && (
-                                                                        <Button
-                                                                            type="button"
-                                                                            disabled={
-                                                                                removing
-                                                                            }
-                                                                            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-                                                                            onClick={() =>
-                                                                                removeSubject(
-                                                                                    sectionSubjects.class_id,
-                                                                                    subject
-                                                                                        .pivot
-                                                                                        .section_id,
-                                                                                    subject
-                                                                                        .pivot
-                                                                                        .subject_id,
-                                                                                    subject
-                                                                                        .teacher_assignments
-                                                                                        .teacher
-                                                                                        .id,
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            {removing ? (
-                                                                                <>
-                                                                                    <Spinner />
-                                                                                    Removing...
-                                                                                </>
-                                                                            ) : (
-                                                                                'Remove Mapping'
-                                                                            )}
-                                                                        </Button>
-                                                                    )}
+                                                                    Teacher:{' '}
+                                                                    {isAssigned
+                                                                        ? `${subject.teacher_assignments?.teacher?.first_name}
+                                   ${subject.teacher_assignments?.teacher?.last_name}`
+                                                                        : 'Not Assigned'}
+                                                                </p>
                                                             </div>
+
+                                                            {/* Teacher Image */}
+                                                            <img
+                                                                className="h-14 w-14 shrink-0 rounded-full border object-cover"
+                                                                src={
+                                                                    subject
+                                                                        ?.teacher_assignments
+                                                                        ?.teacher
+                                                                        ?.photo_url ??
+                                                                    '/images/avatar-placeholder.png'
+                                                                }
+                                                                alt="Teacher"
+                                                            />
                                                         </div>
 
-                                                        <img
-                                                            className="h-15 w-15 rounded-full object-cover"
-                                                            src={
-                                                                subject
-                                                                    ?.teacher_assignments
-                                                                    ?.teacher
-                                                                    ?.photo_url
-                                                            }
-                                                            alt="Teacher Image"
-                                                        />
+                                                        {/* Meta */}
+                                                        <p className="mt-2 text-xs text-gray-500">
+                                                            Assigned on{' '}
+                                                            {new Date(
+                                                                subject.created_at,
+                                                            ).toLocaleDateString()}
+                                                        </p>
+
+                                                        {/* Footer Actions */}
+                                                        <div className="mt-4 flex flex-wrap gap-2">
+                                                            <Button
+                                                                type="button"
+                                                                disabled={
+                                                                    removing
+                                                                }
+                                                                onClick={() =>
+                                                                    handleRemoveSubject(
+                                                                        form
+                                                                            .data
+                                                                            .section_id,
+                                                                        subject.id,
+                                                                    )
+                                                                }
+                                                                className="bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                                                            >
+                                                                {removing ? (
+                                                                    <>
+                                                                        <Spinner />
+                                                                        Removing...
+                                                                    </>
+                                                                ) : (
+                                                                    'Remove Subject'
+                                                                )}
+                                                            </Button>
+
+                                                            {can(
+                                                                'subject.remove-mapping',
+                                                            ) &&
+                                                                subject.teacher_assignments && (
+                                                                    <Button
+                                                                        type="button"
+                                                                        disabled={
+                                                                            removing
+                                                                        }
+                                                                        onClick={() =>
+                                                                            removeSubject(
+                                                                                sectionSubjects.class_id,
+                                                                                subject
+                                                                                    .pivot
+                                                                                    .section_id,
+                                                                                subject
+                                                                                    .pivot
+                                                                                    .subject_id,
+                                                                                subject
+                                                                                    .teacher_assignments
+                                                                                    .teacher
+                                                                                    .id,
+                                                                            )
+                                                                        }
+                                                                        className="bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                                                                    >
+                                                                        {removing ? (
+                                                                            <>
+                                                                                <Spinner />
+                                                                                Removing...
+                                                                            </>
+                                                                        ) : (
+                                                                            'Remove Mapping'
+                                                                        )}
+                                                                    </Button>
+                                                                )}
+                                                        </div>
                                                     </div>
                                                 );
                                             },

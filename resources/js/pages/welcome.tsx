@@ -20,23 +20,19 @@ export default function Welcome({
                 />
             </Head>
             <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-violet-50 via-blue-50 to-cyan-50 dark:from-slate-950 dark:via-blue-950 dark:to-violet-950">
-                {/* Animated decorative background elements */}
                 <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute top-1/4 -left-20 h-96 w-96 animate-pulse rounded-full bg-gradient-to-r from-violet-300 to-purple-300 opacity-20 blur-3xl dark:from-violet-600 dark:to-purple-600 dark:opacity-10" />
                     <div className="animation-delay-2000 absolute -right-20 bottom-1/4 h-96 w-96 animate-pulse rounded-full bg-gradient-to-r from-blue-300 to-cyan-300 opacity-20 blur-3xl dark:from-blue-600 dark:to-cyan-600 dark:opacity-10" />
                     <div className="animation-delay-4000 absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-gradient-to-r from-pink-300 to-rose-300 opacity-10 blur-3xl dark:from-pink-600 dark:to-rose-600 dark:opacity-5" />
 
-                    {/* Floating particles */}
                     <div className="animation-delay-1000 absolute top-1/3 left-1/4 h-2 w-2 animate-bounce rounded-full bg-violet-400 opacity-60" />
                     <div className="animation-delay-2000 absolute top-1/4 right-1/3 h-3 w-3 animate-bounce rounded-full bg-blue-400 opacity-60" />
                     <div className="animation-delay-3000 absolute bottom-1/3 left-1/3 h-2 w-2 animate-bounce rounded-full bg-cyan-400 opacity-60" />
                     <div className="absolute right-1/4 bottom-1/4 h-3 w-3 animate-bounce rounded-full bg-pink-400 opacity-60" />
                 </div>
 
-                {/* Grid pattern overlay */}
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuMDUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40 dark:opacity-20" />
 
-                {/* Navigation */}
                 <header className="absolute top-6 right-6 z-10 lg:top-8 lg:right-8">
                     <nav className="flex items-center gap-3">
                         {auth.user ? (
@@ -51,13 +47,17 @@ export default function Welcome({
                             <>
                                 <Link
                                     href={login()}
-                                    className="group relative overflow-hidden rounded-xl px-6 py-2.5 text-sm font-medium text-gray-700 transition-all hover:scale-105 dark:text-gray-200"
+                                    className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl border border-white/30 bg-white/20 px-6 py-2.5 text-sm font-semibold text-gray-800 shadow-md backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-blue-400 hover:shadow-xl dark:border-white/10 dark:text-white"
                                 >
+                                    <span className="absolute inset-0 -z-10 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+                                    <span className="absolute -inset-1 -z-20 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-40" />
+
                                     <span className="relative z-10">
                                         Log in
                                     </span>
-                                    <div className="absolute inset-0 -z-10 rounded-xl bg-white/50 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 dark:bg-white/10" />
                                 </Link>
+
                                 {canRegister && (
                                     <Link
                                         href={register()}
@@ -74,24 +74,23 @@ export default function Welcome({
                     </nav>
                 </header>
 
-                {/* Main content */}
                 <main className="relative z-10 mx-auto max-w-6xl px-6 text-center">
-                    {/* Logo/Icon */}
+                    
                     <div className="mb-8 flex justify-center">
                         <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-4 shadow-lg">
                             <GraduationCap className="h-12 w-12 text-white" />
                         </div>
                     </div>
 
-                    {/* Heading */}
+                  
                     <h1 className="mb-4 text-3xl font-bold tracking-tight text-gray-900 lg:text-6xl dark:text-white">
                         School Management
                         <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
                             Made Simple
                         </span>
-                    </h1> 
+                    </h1>
 
-                    {/* Feature cards */}
+               
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="group rounded-xl border border-gray-200 bg-white/80 p-6 backdrop-blur-sm transition-all hover:border-blue-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/80 dark:hover:border-blue-600">
                             <div className="mb-4 inline-flex rounded-lg bg-blue-100 p-3 dark:bg-blue-900/30">
