@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\StudentDetailsController;
 use App\Http\Controllers\Admin\TeachersController;
 use App\Http\Controllers\Admin\StaffManagementController;
 use App\Http\Controllers\Admin\AccountsController;
+use App\Http\Controllers\Admin\ManageAttendanceController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -28,7 +29,7 @@ Route::get('/', function () {
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/test', function(){
+    Route::get('/test', function () {
         return "Testing";
     });
     Route::get('dashboard', function () {
@@ -123,7 +124,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/parent-complaints', [\App\Http\Controllers\Admin\ParentComplaintsController::class, 'index'])->name('admin.parent.complaints');
     Route::get('/classes-sections', [\App\Http\Controllers\Admin\ClassesSectionsController::class, 'index'])->name('admin.classes.sections');
 
-    Route::get('/manage-attendance', [\App\Http\Controllers\Admin\ManageAttendanceController::class, 'index'])->name('admin.attendance');
+    Route::get('/manage-attendance', [ManageAttendanceController::class, 'index'])->name('admin.attendance');
+    Route::post('manage-attendance', [ManageAttendanceController::class, 'store'])->name('admin.attendance.store');
+    Route::get('/manage-attendance/check-date-wise/{date}/{classId}/{sectionId}', [ManageAttendanceController::class, 'checkDateWise'])->name('admin.attendance.check-date-wise');
+
+
+
+
+
     Route::get('/online-classes', [\App\Http\Controllers\Admin\OnlineClassesController::class, 'index'])->name('admin.online.classes');
     Route::resource('/roles', RolesController::class)->names('admin.roles');
     Route::get('/add-permission/{id}', [RolesController::class, 'addPermissionToRole'])->name('add.permission');
