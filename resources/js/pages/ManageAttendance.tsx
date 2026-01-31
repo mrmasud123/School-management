@@ -8,7 +8,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { UserCheck, UserX } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -85,7 +85,7 @@ export default function ManageAttendance({ all_classes }: PropList) {
 
     console.log(date);
 
-    const getDateWiseAttendance = (
+    const getDateWiseAttendance = async (
         selectedDate: Date,
         classId?: string,
         sectionId?: string,
@@ -112,7 +112,7 @@ export default function ManageAttendance({ all_classes }: PropList) {
             },
         });
 
-        axios
+        await axios
             .get(
                 `/manage-attendance/check-date-wise/${formattedDate}/${cId}/${sId}`,
             )
@@ -257,10 +257,16 @@ export default function ManageAttendance({ all_classes }: PropList) {
                 }),
             );
             setStudents(studentsWithNullStatus);
+            // Swal.close();
+            await Swal.fire({
+                title: 'Students Fetched Successfully',
+                text: 'Checking attendance for selected date...',
+                icon: 'success',
+                timer: 1200,
+                showConfirmButton: false,
+            });
 
-            getDateWiseAttendance(today, data.class_id, value);
-
-            Swal.close();
+            await getDateWiseAttendance(today, data.class_id, value);
         } catch {
             toast.error('Failed to load students');
             Swal.close();
@@ -328,6 +334,15 @@ export default function ManageAttendance({ all_classes }: PropList) {
                             ))}
                         </SelectContent>
                     </Select>
+
+                    <Button
+                        variant="outline"
+                        className="ms-auto cursor-pointer border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-500 dark:text-indigo-400 dark:hover:bg-indigo-500/10"
+                    >
+                        <Link href="/manage-attendance/history">
+                            Attendance History
+                        </Link>
+                    </Button>
                 </div>
 
                 <div className="flex flex-col items-start gap-6 md:flex-row">

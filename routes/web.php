@@ -128,6 +128,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('manage-attendance', [ManageAttendanceController::class, 'store'])->name('admin.attendance.store');
     Route::get('/manage-attendance/check-date-wise/{date}/{classId}/{sectionId}', [ManageAttendanceController::class, 'checkDateWise'])->name('admin.attendance.check-date-wise');
 
+    Route::get('manage-attendance/history', [ManageAttendanceController::class, 'history'])->name('admin.attendance.history');
+    Route::get('/manage-attendance/history/data', [ManageAttendanceController::class, 'history'])->name('admin.attendance.history.data');
+    Route::get('/manage-attendance/edit-data', [ManageAttendanceController::class, 'editData'])->name('admin.attendance.edit-data');
+    Route::put('/manage-attendance/update', [ManageAttendanceController::class, 'update'])->name('admin.attendance.update');
 
 
 
