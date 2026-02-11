@@ -77,6 +77,44 @@ const mainNavItems: NavItemWithSubMenu[] = [
         ],
     },
     {
+        title: 'Examination',
+        href: '',
+        icon: ShoppingBasket,
+        roles: ['admin', 'super admin', 'accountant', 'teacher'],
+        submenu: [
+            {
+                title: 'Exam Types',
+                href: '/exam-types',
+                icon: Wallet,
+                roles: ['admin', 'super admin', 'accountant', 'teacher'],
+            },
+            {
+                title: 'Grade Scales',
+                href: '/grade-scales',
+                icon: Users,
+                roles: ['admin', 'super admin', 'accountant', 'teacher'],
+            },
+            // {
+            //     title: 'Exams',
+            //     href: '/exams',
+            //     icon: Users,
+            //     roles: ['admin', 'super admin', 'accountant', 'teacher'],
+            // },
+            // {
+            //     title: 'Exam Schedules',
+            //     href: '/exam-schedules',
+            //     icon: Boxes,
+            //     roles: ['admin', 'super admin', 'accountant', 'teacher'],
+            // },
+            // {
+            //     title: 'Student Progress',
+            //     href: '/student-progress',
+            //     icon: ChevronsLeftRightEllipsis,
+            //     roles: ['admin', 'super admin', 'teacher'],
+            // },
+        ],
+    },
+    {
         title: 'Teachers',
         href: '/teachers',
         icon: BookOpen,

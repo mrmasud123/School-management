@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\Exam\ExamTypeController;
+use App\Http\Controllers\Admin\Exam\GradeScaleController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\InventoryManagementController;
 use App\Http\Controllers\Admin\ParentAccountsController;
@@ -152,7 +154,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('/teachers', TeachersController::class)->names('admin.teachers');
     Route::patch('/{id}/restore', [TeachersController::class, 'restore'])
         ->name('teachers.restore');
-    // Route::post();
+
+
+
+    ///Examinations
+    Route::resource('/exam-types', ExamTypeController::class)->names('admin.exam.types');
+    Route::resource('/grade-scales', GradeScaleController::class)->names('admin.grade.scales');
+    // Route::get('/exams', [ExamsController::class, 'index'])->name('admin.exams');
+    // Route::get('/exam-schedules', [ExamSchedulesController::class, 'index'])->name('admin.exam.schedules');
+    // Route::get('/student-progress', [StudentProgressController::class, 'index'])->name('admin.student.progress');
 
     Route::middleware(['role:teacher'])->group(function () {
         Route::get('/test', function () {
