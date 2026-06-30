@@ -5,6 +5,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -12,8 +13,7 @@ use Spatie\Image\Enums\Fit;
 
 class Teacher extends Model implements HasMedia
 {
-    use SoftDeletes;
-    use InteractsWithMedia;
+    use SoftDeletes, Notifiable, InteractsWithMedia;
     protected $guarded = [];
 
     protected $with = ['media'];

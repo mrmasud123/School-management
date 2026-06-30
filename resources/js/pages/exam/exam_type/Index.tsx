@@ -9,7 +9,7 @@ import {
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { Link } from '@inertiajs/react';
-import { Edit, Trash } from 'lucide-react';
+import { ArrowBigDownDashIcon, Edit, EyeIcon, Trash } from 'lucide-react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 interface ExamType {
     id: number;
@@ -150,12 +150,30 @@ export default function Index({ examTypes }: ExamTypesProps) {
                                         Edit
                                     </Link>
                                 </DropdownMenuItem>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <Link
+                                        href={`/exam-type-subjects/${row.id}`}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <EyeIcon className="text-green-500 dark:text-white" />
+                                        View
+                                    </Link>
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                     // onClick={() => handleDelete(row.id)}
                                     className="cursor-pointer"
                                 >
                                     <Trash className="text-red-500 dark:text-white" />
                                     Delete
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <Link
+                                        href={`/exam-types/${row.id}/assign-exam`}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <ArrowBigDownDashIcon className="text-blue-500 dark:text-white" />
+                                        Assign exam
+                                    </Link>
                                 </DropdownMenuItem>
                             </DropdownMenuGroup>
                         </DropdownMenuContent>

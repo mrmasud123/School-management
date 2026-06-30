@@ -16,7 +16,8 @@ import {
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { Link, router } from '@inertiajs/react';
-import { Edit, NotebookTabs, Trash } from 'lucide-react';
+import { Edit, NotebookTabs, Printer, Trash } from 'lucide-react';
+import { FileSpreadsheet, FileText } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import toast from 'react-hot-toast';
@@ -206,41 +207,16 @@ export default function Students({ students, filters }: StudentsProps) {
             <div className="p-6">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                     <h1 className="text-2xl font-bold">Students</h1>
-
                     <div className="flex flex-wrap items-center gap-2">
-                        <input
-                            type="text"
-                            placeholder="Search by name / admission no"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="rounded border border-gray-300 px-3 py-1"
-                        />
-
-                        <Button
-                            onClick={() => {
-                                const url = route('students.export.excel', {
-                                    search,
-                                    per_page: perPage,
-                                });
-                                window.open(url, '_blank');
-                            }}
-                            className="bg-green-600 text-white hover:bg-green-700"
+                       
+                    <Link
+                            href="/students/create"
+                            className="rounded bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700"
                         >
-                            Export Excel
-                        </Button>
+                            Create Student
+                        </Link>
 
-                        <Button
-                            onClick={() => {
-                                const url = route('students.export.pdf', {
-                                    search,
-                                    per_page: perPage,
-                                });
-                                window.open(url, '_blank');
-                            }}
-                            className="bg-red-600 text-white hover:bg-red-700"
-                        >
-                            Export PDF
-                        </Button>
+                       
 
                         <Link
                             href="/trashed-students"
@@ -248,6 +224,13 @@ export default function Students({ students, filters }: StudentsProps) {
                         >
                             Trashed Students
                         </Link>
+                        <input
+                            type="text"
+                            placeholder="Search by name / admission no"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="rounded border border-gray-300 px-3 py-1"
+                        />
                     </div>
                 </div>
 
@@ -255,6 +238,50 @@ export default function Students({ students, filters }: StudentsProps) {
                     columns={columns}
                     data={students.data}
                     pagination
+                    actions={
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+
+                            <span className="font-medium">
+                                Total: {students.total}
+                            </span>
+
+                            <Button
+                                onClick={() => {
+                                    const url = route('students.export.excel', {
+                                        search,
+                                        per_page: perPage,
+                                    });
+                                    window.open(url, '_blank');
+                                }}
+                                className="flex items-center gap-2 bg-emerald-600 text-white hover:bg-emerald-700 transition"
+                            >
+                                <FileSpreadsheet size={18} />
+                                Excel
+                            </Button>
+ 
+                            <Button
+                                onClick={() => {
+                                    const url = route('students.export.pdf', {
+                                        search,
+                                        per_page: perPage,
+                                    });
+                                    window.open(url, '_blank');
+                                }}
+                                className="flex items-center gap-2 bg-red-600 text-white hover:bg-red-700 transition"
+                            >
+                                <FileText size={18} />
+                                PDF
+                            </Button>
+                            <Button
+                                onClick={() => window.print()}
+                                className="flex items-center gap-2 bg-gray-700 text-white hover:bg-gray-800 transition"
+                            >
+                                <Printer size={18} />
+                                Print
+                            </Button>
+
+                        </div>
+                    }
                     paginationServer
                     paginationTotalRows={students.total}
                     paginationPerPage={students.per_page}

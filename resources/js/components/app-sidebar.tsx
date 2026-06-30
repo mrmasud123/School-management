@@ -32,12 +32,12 @@ import {
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItemWithSubMenu[] = [
-    {
-        title: 'Student Profile',
-        href: '/student-profile',
-        icon: LayoutGrid,
-        roles: ['student'],
-    },
+    // {
+    //     title: 'Student Profile',
+    //     href: '/student-profile',
+    //     icon: LayoutGrid,
+    //     roles: ['student'],
+    // },
     {
         title: 'Dashboard',
         href: dashboard(),

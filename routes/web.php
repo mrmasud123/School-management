@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\TeachersController;
 use App\Http\Controllers\Admin\StaffManagementController;
 use App\Http\Controllers\Admin\AccountsController;
 use App\Http\Controllers\Admin\ManageAttendanceController;
+use App\Http\Controllers\Admin\NotificationController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -159,7 +160,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     ///Examinations
     Route::resource('/exam-types', ExamTypeController::class)->names('admin.exam.types');
+    Route::get('exam-types/{id}/assign-exam', [ExamTypeController::class, 'assignExamSchedule'])
+        ->name('admin.assign.exam.scehdule');
+    Route::post('/assign-exam-schedule', [ExamTypeController::class, 'assignExamScheduleStore'])
+        ->name('admin.assign.exam.scehdule.store');
+    Route::get('/exam-type-subjects/{id}', [ExamTypeController::class, 'examTypeSubjects'])->name('admin.exam.type.subjects');    
+    
     Route::resource('/grade-scales', GradeScaleController::class)->names('admin.grade.scales');
+    
+    //Notifications
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])
+    ->name('notifications.read');
+
+Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+    ->name('notifications.readAll');
+    
+    
+    
     // Route::get('/exams', [ExamsController::class, 'index'])->name('admin.exams');
     // Route::get('/exam-schedules', [ExamSchedulesController::class, 'index'])->name('admin.exam.schedules');
     // Route::get('/student-progress', [StudentProgressController::class, 'index'])->name('admin.student.progress');

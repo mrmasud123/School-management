@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     BarChart2,
@@ -8,8 +8,12 @@ import {
     Users,
     Wallet,
 } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Dashboard() {
+    const { notifications } = usePage().props
+    const [open, setOpen] = useState(false);
+    console.log(usePage().props);
     return (
         <AppLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }]}>
             <Head title="Dashboard" />
@@ -24,7 +28,7 @@ export default function Dashboard() {
                         Here’s a quick overview of today’s activity
                     </p>
                 </div>
-
+                
                 {/* Stats */}
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                     <StatCard

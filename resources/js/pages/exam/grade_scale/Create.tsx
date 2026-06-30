@@ -46,7 +46,6 @@ export default function Create() {
                 <form onSubmit={submit}>
                     <section className="space-y-6 rounded-lg border bg-card p-6">
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            {/* Name */}
                             <div>
                                 <Label className="mb-2">Name</Label>
                                 <Input
@@ -62,7 +61,7 @@ export default function Create() {
                                     </p>
                                 )}
                             </div>
- 
+
                             <div>
                                 <Label className="mb-2">Grade Point</Label>
                                 <Input
@@ -80,7 +79,7 @@ export default function Create() {
                                     </p>
                                 )}
                             </div>
- 
+
                             <div>
                                 <Label className="mb-2">Remarks</Label>
                                 <Textarea
@@ -96,7 +95,7 @@ export default function Create() {
                                     </p>
                                 )}
                             </div>
- 
+
                             <div>
                                 <Label className="mb-2">Color</Label>
                                 <Input

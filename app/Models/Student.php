@@ -7,10 +7,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Spatie\Permission\Traits\HasRoles;
+
 class Student extends Model implements HasMedia
 {
-    use SoftDeletes;
+    use SoftDeletes, HasRoles;
     use InteractsWithMedia;
+    protected $guard_name = 'web';
     protected $guarded = [];
     //    protected $with = ['media'];
 

@@ -137,14 +137,14 @@ class StudentController extends Controller
         DB::afterCommit(function () use ($request, $student) {
 
             if ($request->hasFile('photo')) {
-                $student->addMediaFromRequest('photo')
-                    ->usingFileName(
+                $student->addMediaFromRequest('photo')->usingFileName(
                         'student_photo_' . $student->id . '.' .
                         $request->file('photo')->extension()
-                    )
-                    ->toMediaCollection('students');
+                    )->toMediaCollection('students');
             }
         });
+        
+        $student->assignRole('student');
 
         return redirect()
             ->back()
@@ -173,25 +173,6 @@ class StudentController extends Controller
         return response()->json($student);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    //    public function edit(string $id)
-//    {
-//        $classes = SchoolClass::all();
-//        $sections = Section::withCount('students')->get();
-//        $student = Student::with('studentClass', 'section')->find($id);
-//        $student->photo_url = $student->getFirstMediaUrl('students') ?: null;
-//        return Inertia::render(
-//            'students/EditStudent',
-//            [
-//                'student' => $student,
-//                'classes' => $classes,
-//                'all_section' => $sections
-//            ]
-//        );
-//    }
-
     public function edit(string $id)
     {
         $classes = SchoolClass::all();
@@ -200,7 +181,7 @@ class StudentController extends Controller
         $student = Student::with([
             'studentClass',
             'section',
-            'media', // MUST be here
+            'media',  
         ])->findOrFail($id);
 
         return Inertia::render('students/EditStudent', [
@@ -209,71 +190,6 @@ class StudentController extends Controller
             'all_section' => $sections,
         ]);
     }
-
-
-    /**
-     * Update the specified resource in storage.
-     */
-    //    public function update(StudentAdmissionUpdateRequest $request, string $id)
-//    {
-//        $data = $request->validated();
-//        $uploadedImagePath = null;
-//
-//        try {
-//            DB::beginTransaction();
-//
-//            $student = Student::findOrFail($id); // Fetch the existing student
-//
-//            // Handle photo upload
-//            if ($request->hasFile('photo')) {
-//                // Delete old photo if exists
-//                if ($student->photo && Storage::disk('public')->exists($student->photo)) {
-//                    Storage::disk('public')->delete($student->photo);
-//                }
-//
-//                $uploadedImagePath = $request->file('photo')->store('uploads/students', 'public');
-//                $data['photo'] = $uploadedImagePath;
-//            }
-//
-//            // Map data for update
-//            $studentData = [
-//                'first_name' => $data['first_name'],
-//                'last_name' => $data['last_name'],
-//                'dob' => $data['dob'],
-//                'blood_group' => $data['blood_group'] ?? null,
-//                'gender' => $data['gender'],
-//                'email' => $data['email'] ?? null,
-//                'father_name' => $data['father_name'],
-//                'mother_name' => $data['mother_name'],
-//                'father_occupation' => $data['father_occupation'],
-//                'mother_occupation' => $data['mother_occupation'],
-//                'nationality' => $data['nationality'],
-//                'guardian_phone' => $data['guardian_phone'],
-//                'class_id' => $data['class_id'],
-//                'section_id' => $data['section_id'],
-//                'admission_date' => $data['admission_date'],
-//                'academic_year' => $data['academic_year'],
-//                'previous_school' => $data['previous_school'] ?? null,
-//                'address' => $data['current_address'] ?? null,
-//                'photo' => $data['photo'] ?? $student->photo,
-//                'status' => $data['status'],
-//            ];
-//
-//            $student->update($studentData); // Update existing student
-//
-//            DB::commit();
-//
-//            return redirect()
-//                ->back()
-//                ->with('success', 'Student updated successfully!');
-//        } catch (\Exception $e) {
-//            DB::rollBack();
-//
-//            if ($uploadedImagePath && Storage::disk('public')->exists($uploadedImagePath)) {
-//                Storage::disk('public')->delete($uploadedImagePath);
-//            }
-//        }
-//    }
 
     public function update(StudentAdmissionUpdateRequest $request, string $id)
     {

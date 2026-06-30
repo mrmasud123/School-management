@@ -3,8 +3,14 @@
 namespace App\Http\Controllers\Admin\Exam;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamSchedule;
+use App\Models\SchoolClass;
+use App\Models\Teacher;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use App\Http\Requests\StoreExamScheduleRequest;
 use App\Models\ExamType;
 
 class ExamTypeController extends Controller
@@ -49,7 +55,8 @@ class ExamTypeController extends Controller
      */
     public function show(string $id)
     {
-        //
+
+
     }
 
     /**
@@ -85,4 +92,79 @@ class ExamTypeController extends Controller
     {
         //
     }
+
+    public function assignExamSchedule(string $id)
+    {
+        $examType = ExamType::find($id);
+        $classes = SchoolClass::all();
+        // $exams = ExamType::orderBy('id', 'desc')->get();
+        $teachers = Teacher::all();
+        return Inertia::render('exam/exam_type/AssignExamSchedule', compact('examType', 'classes', 'teachers'));
+    }
+
+    public function assignExamScheduleStore(StoreExamScheduleRequest $request)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $exists = ExamSchedule::where('exam_id', $request->exam_id)
+                ->where('class_id', $request->class_id)
+                ->where('subject_id', $request->subject_id)
+                ->where('section_id', $request->section_id)
+                ->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'message' => 'Exam schedule already exists for this exam, class, subject and section.'
+                ], 422);
+            }
+
+            $schedule = ExamSchedule::create([
+                'exam_id' => $request->exam_id,
+                'class_id' => $request->class_id,
+                'subject_id' => $request->subject_id,
+                'section_id' => $request->section_id,
+
+                'exam_date' => $request->exam_date,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'duration_minutes' => $request->duration_minutes,
+
+                'room_id' => $request->room_id,
+                'invigilator_id' => $request->invigilator_id,
+
+                'total_marks' => $request->total_marks,
+                'passing_marks' => $request->passing_marks,
+
+                'instructions' => $request->instructions,
+                'status' => $request->status,
+                'is_mark_entry_locked' => $request->is_mark_entry_locked,
+                'mark_entry_deadline' => $request->mark_entry_deadline,
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('admin.exam.types.index')
+                ->with('success', 'Exam Schedule created successfully.');
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function examTypeSubjects($id)
+    {
+        $examSubjects = ExamType::find($id);
+        // $examType = ExamType::find($id);
+
+        return Inertia::render('exam/exam_type/ExamSubjects', compact('examSubjects'));
+    }
+
 }

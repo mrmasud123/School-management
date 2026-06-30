@@ -1,7 +1,6 @@
 import AttendanceDrawer from '@/components/custom/AttendanceDrawer';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-
 import {
     Popover,
     PopoverContent,
@@ -14,7 +13,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
@@ -32,8 +30,8 @@ interface AttendanceRow {
         admission_no: string;
     };
     status: 'present' | 'absent';
-    class: { name: string };
-    section: { name: string };
+    class: { id: number; name: string };
+    section: { id: number; name: string };
     attendance_date: string;
 }
 
@@ -48,23 +46,23 @@ interface Props {
 }
 
 export default function AttendanceHistory({ all_classes, attendances }: Props) {
-    console.log('Attendances from server:', attendances);
-    const { can, hasRoles } = useAuthorization();
+
     const [sections, setSections] = useState<any[]>([]);
     const [classId, setClassId] = useState<string | null>(null);
     const [sectionId, setSectionId] = useState<string | null>(null);
+    const [attendanceDate, setAttendanceDate] = useState<Date | undefined>(); // ✅ No default date
+
+    const [perPage, setPerPage] = useState(10);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [editingRow, setEditingRow] = useState<AttendanceRow | null>(null);
     const [editStudents, setEditStudents] = useState<any[]>([]);
     const [loadingEditData, setLoadingEditData] = useState(false);
-
-    const [attendanceDate, setAttendanceDate] = useState<Date | undefined>(
-        new Date(),
-    );
-
-    const [perPage, setPerPage] = useState(10);
     const [loadingSections, setLoadingSections] = useState(false);
 
+    const formatLocalDate = (date: Date) =>
+        format(date, 'yyyy-MM-dd');
+
+    // ✅ Clean Fetch Function
     const fetchAttendance = (
         page = 1,
         per_page = perPage,
@@ -74,64 +72,53 @@ export default function AttendanceHistory({ all_classes, attendances }: Props) {
             attendance_date?: string | null;
         },
     ) => {
-        router.get(
-            '/manage-attendance/history/data',
-            {
-                page,
-                per_page,
-                class_id: overrides?.class_id ?? classId,
-                section_id: overrides?.section_id ?? sectionId,
-                attendance_date:
-                    overrides?.attendance_date ??
-                    (attendanceDate ? formatLocalDate(attendanceDate) : null),
-            },
-            {
-                preserveState: true,
-                replace: true,
-            },
+        const params: any = {
+            page,
+            per_page,
+            class_id: overrides?.class_id ?? classId,
+            section_id: overrides?.section_id ?? sectionId,
+            attendance_date:
+                overrides?.attendance_date ??
+                (attendanceDate ? formatLocalDate(attendanceDate) : null),
+        };
+
+        // Remove empty values
+        Object.keys(params).forEach(
+            key => (params[key] == null || params[key] === '') && delete params[key]
         );
+
+        router.get('/manage-attendance/history/data', params, {
+            preserveState: true,
+            replace: true,
+        });
     };
 
-    function formatLocalDate(date: Date) {
-        const year = date.getFullYear();
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
+    // Class Change
     const handleClassChange = async (value: string) => {
         setClassId(value);
         setSectionId(null);
         setSections([]);
         setLoadingSections(true);
 
-        fetchAttendance(1, perPage, {
-            class_id: value,
-            section_id: null,
-            attendance_date: formatLocalDate(attendanceDate as Date),
-        });
+        fetchAttendance(1, perPage, { class_id: value, section_id: null });
 
         try {
-            const res = await axios.get(
-                `/fetch-sections-student-admission/${value}`,
-            );
+            const res = await axios.get(`/fetch-sections-student-admission/${value}`);
             setSections(res.data.sections ?? []);
-        } catch (e) {
-            console.error('Failed to fetch sections', e);
+        } catch (error) {
             setSections([]);
         } finally {
             setLoadingSections(false);
         }
     };
 
-    const handleSectionChange = async (value: string) => {
+    // Section Change
+    const handleSectionChange = (value: string) => {
         setSectionId(value);
-        fetchAttendance(1, perPage, {
-            class_id: classId,
-            section_id: value,
-            attendance_date: formatLocalDate(attendanceDate as Date),
-        });
+        fetchAttendance(1, perPage, { section_id: value });
     };
 
+    // Edit Click
     const handleEditClick = async (row: AttendanceRow) => {
         setEditingRow(row);
         setDrawerOpen(true);
@@ -140,17 +127,15 @@ export default function AttendanceHistory({ all_classes, attendances }: Props) {
         try {
             const res = await axios.get(`/manage-attendance/edit-data`, {
                 params: {
-                    class_id: row.class?.id,
-                    section_id: row.section?.id,
-                    attendance_date: row?.attendance_date,
+                    class_id: row.class.id,
+                    section_id: row.section.id,
+                    attendance_date: row.attendance_date,
                 },
             });
 
             setEditStudents(res.data.students);
-            console.log(res);
-        } catch (e) {
-            console.log(e);
-            console.error('Failed to load attendance', e);
+        } catch (error) {
+            console.error(error);
         } finally {
             setLoadingEditData(false);
         }
@@ -161,10 +146,10 @@ export default function AttendanceHistory({ all_classes, attendances }: Props) {
             name: 'Student',
             cell: (row) => (
                 <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
                         <User size={14} />
                     </div>
-                    <span className="font-medium text-gray-800 dark:text-gray-100">
+                    <span className="font-medium">
                         {row.student.first_name} {row.student.last_name}
                     </span>
                 </div>
@@ -172,47 +157,39 @@ export default function AttendanceHistory({ all_classes, attendances }: Props) {
         },
         {
             name: 'Admission No',
-            selector: (row) => row.student.admission_no,
-            cell: (row) => (
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                    #{row.student.admission_no}
-                </span>
-            ),
+            selector: row => row.student.admission_no,
         },
         {
             name: 'Class',
-            cell: (row) => (
-                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                    <Clipboard size={14} className="text-gray-400" />
-                    Class - {row.class.name}
+            cell: row => (
+                <div className="flex items-center gap-2">
+                    <Clipboard size={14} />
+                    {row.class.name}
                 </div>
             ),
         },
         {
             name: 'Section',
-            cell: (row) => (
-                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                    <Users size={14} className="text-gray-400" />
+            cell: row => (
+                <div className="flex items-center gap-2">
+                    <Users size={14} />
                     {row.section.name}
                 </div>
             ),
         },
         {
             name: 'Date',
-            cell: (row) => (
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                    {new Date(row.attendance_date).toLocaleDateString()}
-                </span>
-            ),
+            cell: row =>
+                new Date(row.attendance_date).toLocaleDateString(),
         },
         {
             name: 'Status',
-            cell: (row) => (
+            cell: row => (
                 <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${
+                    className={`px-3 py-1 text-xs rounded-full capitalize ${
                         row.status === 'present'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
                     }`}
                 >
                     {row.status}
@@ -221,10 +198,9 @@ export default function AttendanceHistory({ all_classes, attendances }: Props) {
         },
         {
             name: 'Action',
-            cell: (row) => (
+            cell: row => (
                 <Button
                     variant="outline"
-                    className="cursor-pointer"
                     onClick={() => handleEditClick(row)}
                 >
                     <Edit size={16} className="mr-1 text-green-600" />
@@ -237,15 +213,14 @@ export default function AttendanceHistory({ all_classes, attendances }: Props) {
     return (
         <AppLayout
             breadcrumbs={[
-                {
-                    title: 'Attendance History',
-                    href: '/manage-attendance/history',
-                },
+                { title: 'Attendance History', href: '/manage-attendance/history' },
             ]}
         >
             <div className="space-y-6 p-8">
+
                 {/* Filters */}
-                <div className="flex flex-wrap gap-4 rounded bg-white p-6 shadow">
+                <div className="flex flex-wrap gap-4 bg-white p-6 rounded shadow">
+
                     <Select onValueChange={handleClassChange}>
                         <SelectTrigger className="w-40">
                             <SelectValue placeholder="Select Class" />
@@ -277,27 +252,20 @@ export default function AttendanceHistory({ all_classes, attendances }: Props) {
 
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className="w-[200px] justify-start text-left font-normal"
-                            >
+                            <Button variant="outline" className="w-[200px] justify-start">
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {attendanceDate
                                     ? format(attendanceDate, 'PPP')
                                     : 'Pick a date'}
                             </Button>
                         </PopoverTrigger>
-
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent align="start" className="p-0">
                             <Calendar
                                 mode="single"
                                 selected={attendanceDate}
                                 onSelect={(date) => {
                                     setAttendanceDate(date);
-
                                     fetchAttendance(1, perPage, {
-                                        class_id: classId,
-                                        section_id: sectionId,
                                         attendance_date: date
                                             ? formatLocalDate(date)
                                             : null,
@@ -310,7 +278,7 @@ export default function AttendanceHistory({ all_classes, attendances }: Props) {
                 </div>
 
                 {/* Table */}
-                <div className="rounded bg-white p-6 shadow">
+                <div className="bg-white p-6 rounded shadow">
                     <DataTable
                         columns={columns}
                         data={attendances.data}
@@ -338,41 +306,26 @@ export default function AttendanceHistory({ all_classes, attendances }: Props) {
                 onChangeStudents={setEditStudents}
                 onSave={async () => {
                     Swal.fire({
-                        title: 'Updating Attendances',
-                        text: 'Please wait...',
+                        title: 'Updating...',
                         allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        },
+                        didOpen: () => Swal.showLoading(),
                     });
-                    await axios
-                        .put('/manage-attendance/update', {
+
+                    try {
+                        await axios.put('/manage-attendance/update', {
                             attendance_date: editingRow?.attendance_date,
-                            class_id: editingRow?.class?.id,
-                            section_id: editingRow?.section?.id,
+                            class_id: editingRow?.class.id,
+                            section_id: editingRow?.section.id,
                             students: editStudents,
-                        })
-                        .then(() => {
-                            Swal.close();
-                            Swal.fire({
-                                title: 'Success',
-                                text: 'Attendance updated successfully',
-                                icon: 'success',
-                                timer: 2000,
-                                showConfirmButton: false,
-                            });
-                        })
-                        .catch((error) => {
-                            Swal.close();
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'Something went wrong',
-                                icon: 'error',
-                            });
                         });
 
+                        Swal.fire('Success', 'Attendance updated', 'success');
+                        fetchAttendance();
+                    } catch {
+                        Swal.fire('Error', 'Something went wrong', 'error');
+                    }
+
                     setDrawerOpen(false);
-                    fetchAttendance();
                 }}
             />
         </AppLayout>

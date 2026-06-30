@@ -113,7 +113,7 @@ export default function PermissionIndex() {
 
                 {Object.entries(permissions).map(([module, perms]) => (
                     <div key={module} className="mb-4 rounded-md border p-4">
-                        <h3 className="mb-2 rounded-md bg-green-500 px-2 py-1 font-bold text-white uppercase">
+                        <h3 className="mb-2 inline-block rounded-md bg-green-500 px-2 py-1 font-bold text-white uppercase">
                             {module}
                         </h3>
                         <div className="grid grid-cols-2 gap-2 md:grid-cols-4">

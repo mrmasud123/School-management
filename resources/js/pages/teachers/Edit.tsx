@@ -71,7 +71,7 @@ export default function Edit({ teacher, designations, employmentTypes, qualifica
   
 
   return (
-    <AppLayout breadcrumbs={[{ title: 'Edit Teacher', href: `/teachers/${teacher?.id}/edit` }]}>
+    <AppLayout breadcrumbs={[{ title: 'Edit Teacher', href: `/teachers/${teacher?.id}/edit` },{ title: 'Edit', href: '#' }]}>
       <Head title="Edit Teacher" />
 
       <form onSubmit={submit} className="p-6 space-y-8" encType={"multipart/form-data"}>

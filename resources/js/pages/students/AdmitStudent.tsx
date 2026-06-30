@@ -83,7 +83,7 @@ export default function AdmitStudent({ classes }) {
 
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Student Admission', href: '/student-admission' }]}>
+        <AppLayout breadcrumbs={[{ title: 'Student', href: '/students' }, { title: 'Admission', href: '#' }]}>
             <Head title="Student Admission" />
                 <div className="p-8">
                     <h1 className="text-3xl font-bold">Student Admission</h1>

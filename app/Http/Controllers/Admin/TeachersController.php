@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use App\Models\Teacher;
+use App\Models\User;
 use App\Models\Designation;
 use App\Models\Qualification;
 use App\Models\EmployementType;
@@ -16,6 +17,8 @@ use App\Models\Specialization;
 use App\Models\TeacherContact;
 use App\Models\TeacherSpecialization;
 use App\Http\Resources\TeacherResource;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\TeacherRegistered;
 
 class TeachersController extends Controller
 {
@@ -140,7 +143,9 @@ class TeachersController extends Controller
                     ->toMediaCollection('files');
             }
         });
+        $superAdmins = User::role('super admin')->get();
 
+        Notification::send($superAdmins, new TeacherRegistered($teacher));
         return redirect()
             ->route('admin.teachers.index')
             ->with('success', 'Teacher added successfully!');
